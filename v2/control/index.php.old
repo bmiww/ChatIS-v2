@@ -1,0 +1,307 @@
+<?php
+// Most from here is based on https://infosec.mozilla.org/guidelines/web_security
+
+header('Content-Type: text/html; charset=UTF-8');
+
+$config['login'] = "is2511";
+$config['password'] = "$2y$10$7aq1XKCtF9qKPhJVlgYM.uo9fJmC0C0tC08J5.tpFaMNfugPicnuG";
+
+//$config['emailTo'] = "0"; // E-Mail to send to. `0` to turn off
+//$config['emailFrom'] = "Sniffer@proteam.com.ru"; // E-Mail to send from
+//$config['emailTheme'] = "Sniffer: new query";
+
+error_reporting(0); // Disable errors
+
+
+function authFail() {
+    header('WWW-Authenticate: Basic realm="ChatIS"');
+    header('HTTP/1.0 401 Unauthorized');
+    die("<br/><br/><div align=\"center\"><b>Wrong login or password!</b></div>");
+}
+
+
+
+
+function getDirContents($dir, &$results = array()) {
+    $files = scandir($dir);
+    foreach ($files as $key => $value) {
+        $path = realpath($dir . DIRECTORY_SEPARATOR . $value);
+        if (!is_dir($path)) {
+            $results[] = $path;
+//        } else if ($value != "." && $value != "..") {
+//            getDirContents($path, $results);
+//            $results[] = $path;
+        }
+    }
+    return $results;
+}
+
+function getDurationFromNow(int $timestampEpoch): DateInterval {
+//    var_dump(date_create('now', new DateTimeZone('UTC')));
+//    var_dump(date_create("@$timestampEpoch", new DateTimeZone('UTC')));
+//    die();
+    return date_create('now', new DateTimeZone('UTC'))
+        ->diff(date_create("@$timestampEpoch", new DateTimeZone('UTC')));
+}
+
+function formatDuration(DateInterval $dur, bool $shorter = false): String {
+    $r = '';
+    if ($shorter) {
+        $c = 0;
+        if ($dur->y && ($c < 2)) {
+            $r .= $dur->y.' years ';
+            $c += 1;
+        }
+        if ($dur->m && ($c < 2)) {
+            $r .= $dur->m.' months ';
+            $c += 1;
+        }
+        if ($dur->d && ($c < 2)) {
+            $r .= $dur->d.' days ';
+            $c += 1;
+        }
+        if ($dur->h && ($c < 2)) {
+            $r .= $dur->h.' hours ';
+            $c += 1;
+        }
+        if ($dur->i && ($c < 2)) {
+            $r .= $dur->i.' minutes ';
+            $c += 1;
+        }
+        if ($dur->s && ($c < 2)) {
+            $r .= $dur->s.' seconds';
+            $c += 1;
+        }
+        return $r;
+    }
+    if ($dur->y) $r .= $dur->y.' years ';
+    if ($dur->m) $r .= $dur->m.' months ';
+    if ($dur->d) $r .= $dur->d.' days ';
+    if ($dur->h) $r .= $dur->h.' hours ';
+    if ($dur->i) $r .= $dur->i.' minutes ';
+    if ($dur->s) $r .= $dur->s.' seconds';
+//    $r .= ' ago';
+    return $r;
+}
+
+function getStatusValue($channel, $status, $latestEpoch): String {
+    $r = 'online';
+    if ($status['streaming'])
+        $r = 'streaming';
+    if (date_timestamp_get(new DateTime()) > $latestEpoch + 60)
+        $r = 'offline';
+    return $r;
+}
+function getStatusIndicator($channel, $status, $latestEpoch): String {
+    $color = '#FFBB00';
+    if ($status['streaming'])
+        $color = '#00DD00';
+    if (date_timestamp_get(new DateTime()) > $latestEpoch + 60)
+        $color = 'red';
+    return '<a style="color: '.$color.';">■</a>';
+}
+
+
+function index() {
+    die();
+}
+
+
+function view()
+{
+    global $config;
+
+    header('Content-Type: text/html; charset=UTF-8');
+    header('Expires: 0');
+
+    if ($_GET['channel']) {
+        header('Content-Type: application/json');
+//        echo '
+//<!DOCTYPE html>
+//<html lang="en">
+//<head>
+//    <title>ChatIS | Session view</title>
+//</head>
+//<body>
+//';
+
+//        echo '<pre>';
+        $list = getDirContents('cache/channel/');
+        foreach ($list as $i => $file) {
+            $channel = str_replace('.json', '', basename($file));
+            if (strtolower($channel) == strtolower($_GET['channel'])) {
+                $json = json_decode(file_get_contents($file), true);
+                echo json_encode($json, JSON_PRETTY_PRINT);
+            }
+        }
+//        echo '</pre>';
+
+//        echo '
+//</body>
+//</html>
+//';
+    } else {
+        echo '
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ChatIS | Session list</title>
+    <script src="https://chatis.is2511.com/jquery.min.js"></script>
+    <style>
+    table, th, td {
+        border: solid black 1px;
+    }
+    td {
+        border-bottom: none;
+        border-top: none;
+    }
+    </style>
+</head>
+<body>
+';
+        echo '<div style="display: flex;">';
+        echo '<table>';
+        echo '<tr><th>TV</th><th>Channel</th><th>Since reload</th><th>Last online</th><th>Version</th></tr>';
+        $onlineCount = 0;
+        $list = getDirContents('cache/channel/');
+        foreach ($list as $i => $file) {
+            $json = json_decode(file_get_contents($file), true);
+            $channel = str_replace('.json', '', basename($file));
+            echo '<tr class="status-' . getStatusValue($channel, $json['ChatIS']['obs']['status'], ($json['ChatIS']['onlineTracker']['latestOn'] / 1000)) . '">
+<td><a href="https://twitch.tv/' . $channel . '">TV</a>' . getStatusIndicator($channel, $json['ChatIS']['obs']['status'], ($json['ChatIS']['onlineTracker']['latestOn'] / 1000)) . '</td>
+<td>
+<a href="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '&channel=' . $channel . '">' . $channel . '</a>
+</td>
+<td>' . formatDuration(getDurationFromNow($json['ChatIS']['onlineTracker']['loadedOn'] / 1000), true) . '</td>
+<td>' . formatDuration(getDurationFromNow($json['ChatIS']['onlineTracker']['latestOn'] / 1000), true) . ' ago</td>
+<td>' . $json['ChatIS']['version'] . '</td>
+</tr>';
+        }
+        echo '</table>';
+
+        echo '<div style="width: 10px;"></div>';
+
+        echo '<div style="display: inline-flex; flex-flow: column;">
+<div>Total: '.count($list).'</div><br>
+<div style="display: inline"><input type="checkbox" id="autoreloadCheckbox"> Auto-reload (5m)</div>
+<div style="display: inline"><input type="checkbox" checked="checked" id="showStreamingCheckbox"> Show <a style="color: #00DD00;">■</a> streaming</div>
+<div style="display: inline"><input type="checkbox" checked="checked" id="showOnlineCheckbox"> Show <a style="color: #FFBB00;">■</a> online</div>
+<div style="display: inline"><input type="checkbox" checked="checked" id="showOfflineCheckbox"> Show <a style="color: red;">■</a> offline</div>
+<script>
+const autoreloadCheckbox = document.getElementById("autoreloadCheckbox");
+autoreloadCheckbox.checked = true;
+setInterval(() => {
+    if (autoreloadCheckbox.checked)
+        window.location.reload();
+}, 5*60*1000);
+
+
+let showStreamingCheckbox = $("#showStreamingCheckbox");
+let showOnlineCheckbox = $("#showOnlineCheckbox");
+let showOfflineCheckbox = $("#showOfflineCheckbox");
+
+showStreamingCheckbox.change(function () {
+    if(this.checked){
+        $(".status-streaming").show();
+    } else {
+        $(".status-streaming").hide();
+    }
+});
+        
+showOnlineCheckbox.change(function () {
+    if(this.checked){
+        $(".status-online").show();
+    } else {
+        $(".status-online").hide();
+    }
+});
+        
+showOfflineCheckbox.change(function () {
+    if(this.checked){
+        $(".status-offline").show();
+    } else {
+        $(".status-offline").hide();
+    }
+});
+
+
+if (!showStreamingCheckbox.prop("checked"))
+    $(".status-streaming").hide();
+
+if (!showOnlineCheckbox.prop("checked"))
+    $(".status-online").hide();
+
+if (!showOfflineCheckbox.prop("checked"))
+    $(".status-offline").hide();
+
+
+
+</script>
+</div>';
+        echo '</div>';
+
+        echo '
+</body>
+</html>
+';
+    }
+}
+
+
+//function del()
+//{
+//    global $config;
+//    if (!empty($_GET['all']) && $_GET['all'] == 1) {
+//        $link = fopen($config['file'], "w");
+//        fclose($link);
+//    } else {
+//        $file = file($config['file']);
+//        foreach ($_POST as $string)
+//        {
+//            $array = explode("-", $string);
+//            if ($array[0] == "del") {
+//                unset($file[$array[1] - 1]);
+//            }
+//        }
+//        unset($array);
+//        $string = "";
+//        foreach ($file as $str)
+//        {
+//            $string .= $str;
+//        }
+//        $link = fopen($config['file'], "w");
+//        flock($link, LOCK_EX);
+//        fwrite($link, $string);
+//        flock($link, LOCK_UN);
+//        fclose($link);
+//        unset($file, $string);
+//    }
+//    unset($link);
+//    header("Location: ".$_SERVER['PHP_SELF']."?mode=view");
+//}
+
+
+if (empty($_GET['mode'])) {
+    $_GET['mode'] = "index";
+} else {
+    if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW']))
+        authFail();
+    if (!($_SERVER['PHP_AUTH_USER'] == $config['login']
+        && password_verify($_SERVER['PHP_AUTH_PW'], $config['password'])))
+        authFail();
+}
+
+
+switch ($_GET['mode']) {
+    case "view":
+        view();
+        break;
+//    case "delete":
+//        del();
+//        break;
+    default:
+        index();
+        break;
+}
+
+?>

@@ -70,7 +70,7 @@ a:hover {
 }
 
 form[name="generator"] {
-    width: 950px;
+    width: 1050px;
     margin: 15px;
     padding: 25px;
     border-radius: 15px;
@@ -85,12 +85,12 @@ form[name="generator"] {
 .form_table {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-evenly;
     align-items: flex-start;
 }
 
 .form_col {
-    width: 300px;
+    width: 400px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -123,6 +123,12 @@ form[name="generator"] {
 .form_row.center {
     justify-content: center;
     margin-bottom: 20px;
+}
+
+.form_row.right input[type="text"]:not(.short), .form_row.left input[type="text"]:not(.short) {
+    width: 100%;
+    height: 25px;
+    font-size: 0.7em;
 }
 
 input[type="text"] {
@@ -206,8 +212,25 @@ input:focus {
     outline: none;
 }
 
+#botNamesContainer input[name="botNames"] {
+    width: 100%;
+    /*height: 25px;*/
+    /*font-size: 0.7em;*/
+}
+
+/*#botNamesContainer input[name="botNames"]::placeholder {*/
+/*    opacity: 0.8;*/
+/*    color: red;*/
+/*}*/
+
+#botNamesContainer label {
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
 #submit_container {
     display: flex;
+    width: 100%;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -226,8 +249,10 @@ input:focus {
 }
 
 #example {
-    margin: 25px 0px;
-    margin-top: 10px;
+    display: block;
+    width: 80%;
+    /*height: 10em;*/ /* TODO: enable back */
+    margin: 10px 0 25px;
     padding: 1rem;
     border-radius: 15px;
     overflow: hidden;
@@ -247,6 +272,7 @@ input:focus {
 
 #example .badge {
     vertical-align: middle;
+    border-radius: 10%;
 }
 
 #example .cheer_bits {
@@ -322,6 +348,11 @@ input[type="button"]:hover {
     margin: 1em;
 }
 
+details summary {
+    text-align: center;
+    font-size: 2rem;
+}
+
 #donation {
     font-size: 0.7em;
     font-weight: 300;
@@ -337,7 +368,7 @@ input[type="button"]:hover {
 }
 
 #donation form {
-    margin: 15px;
+    margin: 0 15px;
 }
 
 #paypal {
@@ -359,6 +390,12 @@ footer {
     background-color: black;
 }
 
+.github {
+    height: 20px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
 footer p {
     font-size: 0.8em;
     font-weight: 200;
@@ -368,6 +405,19 @@ footer p {
 footer a {
     font-weight: 400;
 }
+
+.simpler-link {
+    font-weight: inherit;
+}
+
+#feature-list li {
+    margin: 0.15rem;
+}
+
+.input-bad {
+    border: 2px solid red !important;
+}
+
 
 
 /* Scrollbar */

@@ -1,0 +1,8 @@
+@font-face {
+    font-family: Alsina;
+    src: url(https://chatis.is2511.com/v2/styles/Alsina_Ultrajada.ttf);
+}
+
+#chat_container {
+    font-family: 'Alsina', cursive;
+}
