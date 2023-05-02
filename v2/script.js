@@ -1,4 +1,4 @@
-const version = '2.28.5+496';
+const version = '2.28.6+497';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1008,9 +1008,12 @@ var Chat = {
                         $badge.attr('src', 'https://cdn.discordapp.com/attachments/899831580720263179/946925293002719303/Ziggy_chatis_.png');
                     }
                     if (nick.toLowerCase() === 'liptongod') {
-                        $badge.attr('src', 'https://media.discordapp.net/attachments/987445091893403658/987445194578354186/ezgif72_5.png');
-                        // https://media.discordapp.net/attachments/987445091893403658/987445194318299266/ezgif36_5.png
-                        // https://media.discordapp.net/attachments/987445091893403658/987445194087604224/ezgif18_5.png
+                        // $badge.attr('src', 'https://media.discordapp.net/attachments/987445091893403658/987445194578354186/ezgif72_5.png');
+                        // // https://media.discordapp.net/attachments/987445091893403658/987445194318299266/ezgif36_5.png
+                        // // https://media.discordapp.net/attachments/987445091893403658/987445194087604224/ezgif18_5.png
+                        $badge.attr('src', 'https://cdn.7tv.app/emote/60e8677677b18d5dd3800410/3x.webp');
+                        // https://cdn.7tv.app/emote/60e8677677b18d5dd3800410/2x.webp
+                        // https://cdn.7tv.app/emote/60e8677677b18d5dd3800410/1x.webp
                     }
                     if (nick.toLowerCase() === 'itsbandorax') {
                         $badge.attr('src', 'https://cdn.7tv.app/emote/62b069136f979a87147499f9/3x.webp');
