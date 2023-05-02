@@ -30,7 +30,7 @@
     </header>
 
     <section>
-        <p>
+        <p style="font-size: 1.2rem;">
             <em>ChatIS</em> (<i>jChat</i> fork) is an overlay that allows you to show your Twitch chat on screen with OBS, XSplit, and any other streaming software that supports browser sources. It supports your
             <a href="https://betterttv.com/" target="_blank">BetterTTV</a>, <a href="https://www.frankerfacez.com/" target="_blank">FrankerFaceZ</a> and
             <a href="https://7tv.app/" target="_blank">7TV</a>  emotes. Also: auto-refresh on 7tv emotes updates, 7tv username paints.
@@ -38,8 +38,8 @@
             a chat full of !gamble addicts, you can choose to hide bots and commands messages. It also comes with many fonts and styling options, maybe choose a custom font from your PC.
         </p>
 
-        <p style="margin-bottom: 0.2rem;">Feature list:</p>
-        <ul id="feature-list" style="margin: auto auto 1rem;">
+        <p style="margin-bottom: 0.2rem;font-size: 1.2rem;">Feature list:</p>
+        <ul id="feature-list" style="margin: auto auto 1rem;font-size: 1.2rem;">
             <li>Emotes from FFZ, BTTV, 7TV</li>
             <li>Badges from FFZ, BTTV, 7TV, FFZ:AP, Chatterino (+Homies)</li>
             <li>Use any font you have on your PC</li>
@@ -187,10 +187,8 @@
                         <span class="colon">:</span>
                         </span><span class="message"><img class="cheer_emote" src="https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/light/animated/100/4.gif"><span class="cheer_bits">100</span> Nice chat <img class="emote" src="https://cdn.betterttv.net/frankerfacez_emote/341767/4"> <img class="emote" src="https://cdn.7tv.app/emote/6040aacfcf6746000db1034f/4x.webp"></span>
                     </div>
-                    <div class="chat_line"><span class="user_info" data-nick="is2511"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/549c0448-102a-44b9-b273-4d901d8568f2/3"><span class="nick" style="color: rgb(138, 43, 226);">IS2511</span><span class="colon">:</span></span><span class="message">jChat <span style="text-decoration: line-through 0.1em;">but better</span> <img class="emote" src="https://cdn.7tv.app/emote/635656be3c9616b8c4af7652/4x.webp"> <img class="emote" src="https://cdn.7tv.app/emote/635656ad041a1a2f1fe1845b/4x.webp"></span></div>
+                    <div class="chat_line"><span class="user_info" data-nick="is2511"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/549c0448-102a-44b9-b273-4d901d8568f2/3"><img class="badge" src="https://cdn.7tv.app/badge/62f98190e46eb00e438a6970/3x"><span class="nick" style="color: rgb(138, 43, 226);">IS2511</span><span class="colon">:</span></span><span class="message">jChat <span style="text-decoration: line-through 0.1em;">but better</span> <img class="emote" src="https://cdn.7tv.app/emote/635656be3c9616b8c4af7652/4x.webp"> <img class="emote" src="https://cdn.7tv.app/emote/635656ad041a1a2f1fe1845b/4x.webp"></span></div>
                     <div class="chat_line" data-nick="weest"><span class="user_info"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/3"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/0eacd590-9185-4029-af43-2e3e1b8bacb6/3"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/d12a2e27-16f6-41d0-ab77-b780518f00a3/3"><span class="nick" style="color: rgb(153, 0, 255);">Weest</span><span class="colon">:</span></span><span class="message">THIS PLUGIN IS JUST WHAT I NEEDED <span class="emote-container"><img class="emote" src="https://cdn.7tv.app/emote/62ca599dafc685668feaad4a/4x.webp"></span></span></div>
-<!--                    <div class="chat_line" data-nick="xqcow"><span class="user_info"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/391e622f-69ac-46c6-9049-9eea60c7b957/3"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/d12a2e27-16f6-41d0-ab77-b780518f00a3/3"><span class="nick" style="color: rgb(0, 0, 255);">xQcOW</span><span class="colon">:</span></span><span class="message">100% real message</span></div>-->
-
                     <div class="chat_line" data-nick="iinnkii"><span class="user_info"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/97a70757-3089-4b0a-b330-13db00b836de/3"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/1d4b03b9-51ea-42c9-8f29-698e3c85be3d/3"><span class="nick" style="color: rgb(154, 205, 50);">iinnkii</span><span class="colon">:</span></span><span class="message">gay sex is good <img class="emote" src="https://cdn.betterttv.net/emote/59143b496996b360ff9b807c/3x.webp"></span></div>
                     <div class="chat_line" data-nick="tristianjones116"><span class="user_info"><img class="badge" src="https://cdn.frankerfacez.com/room-badge/mod/weest/4/rounded"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/549c0448-102a-44b9-b273-4d901d8568f2/3"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/0d85a29e-79ad-4c63-a285-3acd2c66f2ba/3"><span class="nick" style="color: rgb(255, 0, 0);">TristianJones116</span><span class="colon">:</span></span><span class="message"><img class="emote" src="https://cdn.7tv.app/emote/635638fe52859294efd5e123/4x.webp"></span></div>
                     <div class="chat_line" data-nick="batouttahell24"><span class="user_info"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/b817aba4-fad8-49e2-b88a-7cc744dfa6ec/3"><img class="badge" src="https://static-cdn.jtvnw.net/badges/v1/7e56f380-d023-445e-8cfa-e41810f883bb/3"><span class="nick" style="color: rgb(176, 11, 105);">batouttahell24</span><span class="colon">:</span></span><span class="message">jchat 2: electric boogaloo <img class="emote" src="https://cdn.betterttv.net/frankerfacez_emote/483436/4"></span></div>
