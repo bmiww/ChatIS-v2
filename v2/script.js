@@ -48,33 +48,8 @@ function TwitchAPI(url) {
     return $.getJSON(url + (url.search(/\?/) > -1 ? '&' : '?') + 'client_id=' + client_id);
 }
 
-// function giambajAPIproxy(url) {
-//     return $.ajax({
-//         beforeSend: function(request) {
-//             request.setRequestHeader("Authorization", "Basic " + btoa(credentials));
-//         },
-//         dataType: "json",
-//         url: "https://chatis.is2511.com/v2/giambaj-api/?path=" + url
-//             + '&auth=' + ("Basic " + btoa(credentials))
-//     });
-// }
-
-// function giambajAPI(url) {
-//     // return $.ajax({
-//     //     beforeSend: function(request) {
-//     //         request.setRequestHeader("Authorization", "Basic " + btoa(credentials));
-//     //     },
-//     //     dataType: "json",
-//     //     url: "https://api.giambaj.it" + url
-//     // });
-//     return giambajAPIproxy(url);
-// }
-
 function twitchAPIproxy(path, params) {
     return $.ajax({
-        // beforeSend: function(request) { // Trolling
-        //     request.setRequestHeader("Authorization", "Basic " + btoa(credentials));
-        // },
         dataType: "json",
         url: "https://chatis.is2511.com/v2/twitch-api/?path=" + encodeURIComponent(path)
             + '&params=' + encodeURIComponent(params)
@@ -525,32 +500,6 @@ var Chat = {
 
                 setTimeout(() => { resolve(false); }, 3000);
 
-                // ~~Rewrite it to v3~~ done
-                // let endpoints = ['emotes/global', 'users/' + encodeURIComponent(channelID) + '/emotes'];
-                // endpoints.forEach((endpoint, index) => {
-                //     $.getJSON('https://7tv.io/v2/' + endpoint).done(function (res) {
-                //         res.forEach(emote => {
-                //             // This is deprecated, 7tv override flags idea died Sadge
-                //             // if (Chat.info.emotes[emote.name])
-                //             // if (   (Chat.info.emotes[emote.name].platform === 'ffz'
-                //             //         && ((emote.visibility & 16) === 0)) // OVERRIDE_FFZ = 16
-                //             //     || (Chat.info.emotes[emote.name].platform === 'bttv'
-                //             //         && ((emote.visibility & 8) === 0)) ) // OVERRIDE_BTTV = 8
-                //             //     return;
-                //             Chat.info.emotes[emote.name] = {
-                //                 platform: 'stv',
-                //                 id: emote.id,
-                //                 image: emote.urls[emote.urls.length - 1][1],
-                //                 global: endpoint === 'emotes/global',
-                //                 zeroWidth: (emote.visibility & 128) !== 0 // ZERO_WIDTH = 128
-                //             };
-                //         });
-                //         if (index === endpoints.length - 1) {
-                //             resolve(true);
-                //         }
-                //     });
-                // });
-
                 let endpoints = ['emote-sets/global', 'users/twitch/' + encodeURIComponent(channelID)];
                 // Chat.info.emotes[emote.name] = Chat.stv.emoteToChatisEmote(emote, false);
                 endpoints.forEach((endpoint, index) => {
@@ -589,11 +538,6 @@ var Chat = {
             });
         });
 
-        // TwitchAPI('https://api.twitch.tv/v5/users?login=' + Chat.info.channel).done(function(res) {
-        //     Chat.info.channelID = res.users[0]._id;
-        // giambajAPI("/twitch/user/" + Chat.info.channel).done(function(res) {
-        //     res = res['Message'];
-        //     Chat.info.channelID = res.id;
         twitchAPIproxy("/helix/users", "login=" + Chat.info.channel).done(function(res) {
             if (!res.data[0]) {
                 Chat.info.channelID = 0;
@@ -753,15 +697,6 @@ var Chat = {
                         Chat.info.bttvBadges = [];
                     });
 
-                // Deprecated in favor of 7tv EventAPI v3, see `Chat.stv`
-                // $.getJSON('https://7tv.io/v2/cosmetics?user_identifier=login')
-                //     .done(function(res) {
-                //         Chat.info.seventvBadges = res.badges;
-                //     })
-                //     .fail(function() {
-                //         Chat.info.seventvBadges = [];
-                //     });
-
                 $.getJSON('https://api.chatterino.com/badges')
                     .done(function(res) {
                         Chat.info.chatterinoBadges = res.badges;
@@ -794,10 +729,6 @@ var Chat = {
             }
 
             // Load cheers images
-            // TwitchAPI("https://api.twitch.tv/v5/bits/actions?channel_id=" + Chat.info.channelID).done(function(res) {
-            // res.actions.forEach(action => {
-            // giambajAPI("/twitch/cheermotes/" + Chat.info.channelID).done(function(res) {
-            //     res = res['Message'];
             twitchAPIproxy("/helix/bits/cheermotes", "broadcaster_id=" + Chat.info.channelID).done(function(res) {
                 res.data.forEach(action => {
                     Chat.info.cheers[action.prefix] = {}
@@ -809,84 +740,6 @@ var Chat = {
                     });
                 });
             });
-
-
-            // {"channel":"is2511","emote_id":"603c89cbbb69c00014bed23e","name":"ZULUL","action":"REMOVE","actor":"IS2511","emote":null}
-
-            // {"channel":"is2511","emote_id":"603c89cbbb69c00014bed23e","name":"ZULUL","action":"ADD","actor":"IS2511",
-            // "emote":{"name":"ZULUL","visibility":24,"mime":"image/png",
-            //   "tags":["Former Global Emote","Enabled Retroactively"],
-            //   "width":[27,41,65,109],"height":[32,48,76,128],
-            //   "animated":false,
-            //   "urls":[["1","https://cdn.7tv.app/emote/603c89cbbb69c00014bed23e/1x"],
-            //     ["2","https://cdn.7tv.app/emote/603c89cbbb69c00014bed23e/2x"],
-            //     ["3","https://cdn.7tv.app/emote/603c89cbbb69c00014bed23e/3x"],
-            //     ["4","https://cdn.7tv.app/emote/603c89cbbb69c00014bed23e/4x"]],
-            //   "ner":{"id":"603b7c7496832ffa78522da5","twitch_id":"24377667","display_name":"AnatoleAM","login":"anatoleam" }
-            //   }
-            // }
-
-            // Start a listener for 7tv emote updates
-            // Deprecated in favor of 7tv EventAPI v3, see `Chat.stv`
-            // Chat.info.stvEmoteUpdater = new EventSource('https://events.7tv.app/v1/channel-emotes?channel=' + Chat.info.channel.toLowerCase());
-            // Chat.info.stvEmoteUpdater.addEventListener("ready", (e) => {
-            //     // Should be "7tv-event-sub.v1" since this is the `v1` endpoint
-            //     console.log('ChatIS: Connected emote updates for #' + Chat.info.channel + ' (' + e.data + ')');
-            // }, false);
-            // Chat.info.stvEmoteUpdater.addEventListener("update", (e) => {
-            //     // This is a JSON payload matching the type for the specified event channel
-            //     console.log('ChatIS: Received 7tv update...');
-            //     // console.log(e.data);
-            //     showFloat(9, '7TV emote update!', 2*1000);
-            //     // Chat.reloadEmotes('7TV update detected!');
-            //     let updateMessage = 'Error! Whoops :)';
-            //     let d = JSON.parse(e.data);
-            //     switch (d.action) {
-            //         case 'ADD': {
-            //             Chat.info.emotes[d.name] = {
-            //                 platform: 'stv',
-            //                 id: d.emote_id,
-            //                 image: d.emote.urls[d.emote.urls.length - 1][1],
-            //                 zeroWidth: (d.emote.visibility & 128) !== 0 // ZERO_WIDTH = 128
-            //             };
-            //             updateMessage = 'ADD:\n' + strmax(d.name, 16);
-            //         } break;
-            //         case 'REMOVE': {
-            //             for (let [key, value] of entries(Chat.info.emotes))
-            //                 if (d.emote_id === value.id) {
-            //                     delete Chat.info.emotes[key];
-            //                     break;
-            //                 }
-            //             updateMessage = 'REMOVE:\n' + strmax(d.name, 16);
-            //         } break;
-            //         case 'UPDATE': {
-            //             let oldName = '';
-            //             for (let [key, value] of entries(Chat.info.emotes))
-            //                 if (d.emote_id === value.id) {
-            //                     oldName = key;
-            //                     delete Chat.info.emotes[key];
-            //                     break;
-            //                 }
-            //             Chat.info.emotes[d.name] = {
-            //                 platform: 'stv',
-            //                 id: d.emote_id,
-            //                 image: d.emote.urls[d.emote.urls.length - 1][1],
-            //                 zeroWidth: (d.emote.visibility & 128) !== 0 // ZERO_WIDTH = 128
-            //             };
-            //             updateMessage = 'UPDATE:\n' + strmax(oldName, 13) + ' ->\n'
-            //                 + strmax(d.name, 16);
-            //         } break;
-            //     }
-            //     showFloat(9, '7TV emote update!\n' + updateMessage, 3*1000);
-            // }, false);
-            // Chat.info.stvEmoteUpdater.addEventListener("open", (e) => {
-            //     // Connection was opened.
-            // }, false);
-            // Chat.info.stvEmoteUpdater.addEventListener("error", (e) => {
-            //     if (e.readyState === EventSource.CLOSED) {
-            //         // Connection was closed.
-            //     }
-            // }, false);
 
             callback(true);
         });
@@ -968,20 +821,6 @@ var Chat = {
                     if (!Chat.info.userBadges[nick].includes(userBadge)) Chat.info.userBadges[nick].push(userBadge);
                 }
             });
-            // Deprecated in favor of 7tv EventAPI v3, see `Chat.stv`
-            // Chat.info.seventvBadges.forEach(badge => {
-            //     badge.users.forEach(user => {
-            //         if (user === nick) {
-            //             var userBadge = {
-            //                 id: badge.id,
-            //                 source: 'stv',
-            //                 description: badge.tooltip,
-            //                 url: badge.urls[2][1]
-            //             };
-            //             if (!Chat.info.userBadges[nick].includes(userBadge)) Chat.info.userBadges[nick].push(userBadge);
-            //         }
-            //     });
-            // });
             Chat.info.chatterinoBadges.forEach(badge => {
                 badge.users.forEach(user => {
                     if (user === userId) {
@@ -1392,33 +1231,6 @@ var Chat = {
             $message.html(message);
             $chatLine.append($message);
             Chat.info.lines.push($chatLine.wrap('<div>').parent().html());
-
-            // if (!Chat.hasOwnProperty('zw'))
-            //     Chat.zw = function (elem) {
-            //         $(elem).css('margin-left', '-' + (elem.clientWidth) + 'px');
-            //     }
-
-            // if (!Chat.hasOwnProperty('addMarginToZerowidth'))
-            //     Chat.addMarginToZerowidth = function (chatLineId) {
-            //         // console.log('addMarginToZerowidth: id', chatLineId);
-            //         let msg = $('.chat_line[data-id='+chatLineId+'] .message');
-            //         if (msg.length > 0) {
-            //             msg = msg.last()[0];
-            //             msg.childNodes.forEach( (v) => {
-            //                 const img = $(v.childNodes[0]);
-            //                 if (img.hasClass('zerowidth')) {
-            //                     // console.log('Zero-width: ' + v.clientWidth);
-            //                     img.addEventListener('load', function () {
-            //                         img.css('margin-left', '-' + (v.childNodes[0].clientWidth) + 'px');
-            //                     });
-            //                     // $(v.childNodes[0]).css('margin-left', '-' + (v.childNodes[0].clientWidth) + 'px');
-            //                 }
-            //             });
-            //         }
-            //     };
-            // Chat.addMarginToZerowidth(info.id);
-            // // setTimeout(Chat.addMarginToZerowidth, 100, info.id);
-            // // $chatLine.addEventListener('load', function () { Chat.addMarginToZerowidth(info.id) });
         }
     },
 
@@ -1838,40 +1650,6 @@ var Chat = {
                             '</iframe>', timeout, 0);
                     }
                         break;
-                    // case 'text': {
-                    //     if (accessLevel < 500) return;
-                    //     // let opacity = parseFloat((text.match(/ -o ([\d.]+)/) || [])[1]) || 1;
-                    //     let timeout = parseFloat((text.match(/ -t ([\d.]+)/) || [])[1]) * 1000 || 3 * 1000;
-                    //     if (accessLevel < 1500) {
-                    //         timeout = Math.min(timeout, 20 * 1000);
-                    //     }
-                    //     showFloat(8,
-                    //         '<img ' +
-                    //         'src="' + link + '" ' +
-                    //         'width="' + width + '" height="' + height + '" ' +
-                    //         'style="opacity: ' + opacity + ';"' +
-                    //         '</img>', timeout, 0);
-                    // }
-                    //     break;
-                    // case 'emote':
-                        // if (accessLevel < 500) return;
-                        // let emote = args[2];
-                        // let height = parseInt((text.match(/ -h ([\d]+)/) || [])[1]) || vh;
-                        // let width = parseInt((text.match(/ -w ([\d]+)/) || [])[1]) || vw;
-                        // let opacity = parseFloat((text.match(/ -o ([\d.]+)/) || [])[1]) || 1;
-                        // let timeout = parseFloat((text.match(/ -t ([\d.]+)/) || [])[1]) * 1000 || 3 * 1000;
-                        // if (accessLevel < 1500) {
-                        //     timeout = Math.min(timeout, 20 * 1000);
-                        // }
-                        // width = width - (vw * 0.02);
-                        // height = height - (vh * 0.02);
-                        // showFloat(4,
-                        //     '<img ' +
-                        //     'src="' + link + '" ' +
-                        //     'width="' + width + '" height="' + height + '" ' +
-                        //     'style="opacity: ' + opacity + ';"' +
-                        //     '</img>', timeout, 0);
-                        // break;
                     case 'tts': {
                         if (!isThisOverlayVisible()) return;
                         // if (Chat.info.channel.toLowerCase() === 'mmattbtw') accessLevel = 500;
@@ -2148,28 +1926,6 @@ var Chat = {
         // First time connection, "exact" time went online
         setTimeout(Chat.onlineTracker.interval.func, 1000, 'load');
 
-
-        // Chat.cookie = {
-        //     set: (name, value, expire) => {
-        //         const d = new Date();
-        //         d.setTime(d.getTime() + (exdays*24*60*60*1000));
-        //         let expires = "expires="+ d.toUTCString();
-        //         document.cookie = name + "=" + value + ";" + expires + ";path=/";
-        //     },
-        //     get: (name) => {
-        //         name += "=";
-        //         let decodedCookie = decodeURIComponent(document.cookie);
-        //         let ca = decodedCookie.split(';');
-        //         for(let i = 0; i < ca.length; i++) {
-        //             let c = ca[i];
-        //             while (c.charAt(0) === ' '.charAt(0))
-        //                 c = c.substring(1);
-        //             if (c.indexOf(name) === 0)
-        //                 return c.substring(name.length, c.length);
-        //         }
-        //         return '';
-        //     }
-        // };
 
 
         Chat.load(function () {
