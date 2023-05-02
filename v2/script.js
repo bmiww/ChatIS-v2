@@ -1,4 +1,4 @@
-const version = '2.28.4+492';
+const version = '2.28.5+496';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -58,16 +58,20 @@ function twitchAPIproxy(path, params) {
 
 let ttsStorage = [];
 let floatStorage = {};
-function showFloat(id, msg, millis = 5*1000, alpha = 0.2, zIndex = 0) {
+function showFloat(id, msg, millis = 5*1000, alpha = 0.3, zIndex = 0) {
     if (floatStorage[id]) removeFloat(id);
+    const chatFontSize = window.getComputedStyle(document.getElementById("chat_container")).fontSize;
     let $float = $('<pre data-id="' + id + '" style="' +
         'position: fixed; left: 50%; bottom: 1%; max-width: 99%;' +
         'white-space: pre-wrap; margin: 0; padding: 2px;' +
         'background: rgba(0,0,0,' + alpha + ');' +
+        'color: #fff;' +
+        'font-weight: 800;' +
+        'font-size: ' + chatFontSize + ';' +
         'z-index: ' + zIndex + ';' +
         'transform: translate(-50%, 0);">' +
         msg + '</pre>');
-    $('#chat_container').append($float);
+    $('body').append($float);
     floatStorage[id] = $float;
     setTimeout(() => {
         $float.remove();
@@ -1551,10 +1555,10 @@ var Chat = {
                         showFloat(4,
                             '<img ' +
                             'src="' + link + '" ' +
-                            (pAR ? 'onload="Chat.pARfunc(this)"' : '') +
+                            (pAR ? 'onload="Chat.pARfunc(this)" ' : '') +
                             'width="' + width + '" height="' + height + '" ' +
                             'style="opacity: ' + opacity + ';"' +
-                            '</img>', timeout, 0, fg ? 0 : -10);
+                            '/>', timeout, 0, fg ? 0 : -10);
                     }
                         break;
                     case 'HORSING': {
