@@ -948,7 +948,7 @@ var Chat = {
                 '-webkit-background-clip': 'text',
                 '-webkit-text-fill-color': 'transparent',
                 'background-color': 'currentColor',
-                'text-shadow': 'none', // Removing global shadow (ChatIS setting)
+                // 'text-shadow': 'none', // Removing global shadow (ChatIS setting)
             }
 
             if (dropShadow)
