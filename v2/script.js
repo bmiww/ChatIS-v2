@@ -1,4 +1,4 @@
-const version = '2.28.3+491';
+const version = '2.28.4+492';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
