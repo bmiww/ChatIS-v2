@@ -1,4 +1,4 @@
-const version = '2.30.0+452';
+const version = '2.30.1+453';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1025,8 +1025,10 @@ var Chat = {
             let present_roles = [];
             for (let role in roles) {
                 if (roles.hasOwnProperty(role)) {
-                    present_roles.push(role);
-                    $userInfo.attr(`data-role-${role}`, "");
+                    if (roles[role]) {
+                        present_roles.push(role);
+                        $userInfo.attr(`data-role-${role}`, "");
+                    }
                 }
             }
             $userInfo.attr(`data-roles`, present_roles.join(','));
