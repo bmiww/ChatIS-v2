@@ -1,4 +1,4 @@
-const version = '2.30.1+453';
+const version = '2.30.2+454';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -316,13 +316,10 @@ var Chat = {
         },
 
         addBadgeToUserBadges: function (username, id) {
-            // Chat.info.userBadges[username] = Chat.info.userBadges[username].filter(e => e.id !== id);
+            Chat.stv.removeBadgeFromUserBadges(username, id); // Remove if already exists with that id
             const cosmetic = Chat.stv.cosmetics.get(id);
             if (!Chat.info.userBadges[username])
                 Chat.info.userBadges[username] = [];
-            for (const userBadge of Chat.info.userBadges[username]) {
-
-            }
             Chat.info.userBadges[username].push({
                 id: id,
                 source: 'stv',
