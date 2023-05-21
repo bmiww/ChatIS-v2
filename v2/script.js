@@ -1,4 +1,4 @@
-const version = '2.29.0+451';
+const version = '2.30.0+452';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -965,6 +965,53 @@ var Chat = {
 
     write: function(nick, info, message) {
         // Chat.cache.badges[nick.toLowerCase()] = info.badges;
+
+        // TODO: Make this a Map?
+        let roles = {
+            mod: false,
+            vip: false,
+            sub: false,
+            broadcaster: false,
+            twitch_staff: false,
+            twitch_admin: false,
+            twitch_verified: false,
+            // twitch_artist: false,
+            // twitch_turbo: false,
+            // twitch_prime: false,
+            bot: false,
+            chatis_mod: false,
+            chatis_owner: false,
+        };
+        let badge_to_role = {
+            "moderator": "mod",
+            "vip": "vip",
+            "subscriber": "sub",
+            "broadcaster": "broadcaster",
+            "staff": "twitch_staff",
+            "admin": "twitch_admin",
+            "verified": "twitch_verified",
+            "bot": "bot",
+        };
+
+        if (Chat.cache.globalMods.includes(nick.toLowerCase())) {
+            roles.chatis_mod = true;
+        }
+        if (nick.toLowerCase() === 'is2511') {
+            roles.chatis_owner = true;
+        }
+
+        if (info) {
+            if (typeof(info.badges) === 'string') {
+                info.badges.split(',').forEach(badge => {
+                    let [badge_name, badge_version] = badge.split('/');
+                    if (badge_to_role[badge_name]) {
+                        roles[badge_to_role[badge_name]] = true;
+                    }
+                });
+            }
+        }
+
+
         if (info) {
             var $chatLine = $('<div></div>');
             $chatLine.addClass('chat_line');
@@ -973,6 +1020,16 @@ var Chat = {
             $chatLine.attr('data-id', info.id);
             var $userInfo = $('<span></span>');
             $userInfo.addClass('user_info');
+
+            // Add data-* attributes based on roles
+            let present_roles = [];
+            for (let role in roles) {
+                if (roles.hasOwnProperty(role)) {
+                    present_roles.push(role);
+                    $userInfo.attr(`data-role-${role}`, "");
+                }
+            }
+            $userInfo.attr(`data-roles`, present_roles.join(','));
 
             // Writing badges
             if (Chat.info.hideSpecialBadges) {
