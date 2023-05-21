@@ -1,4 +1,4 @@
-const version = '2.28.6+450';
+const version = '2.29.0+451';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1439,7 +1439,7 @@ var Chat = {
                     }
                         break;
                     case 'reload': {
-                        if (accessLevel < 1000) return;
+                        if (accessLevel < 500) return;
                         console.log("ChatIS: Reloading page...");
                         // let href = window.location.href.replace(/&random=[0-9]*/g, "")
                         // href += '&random=' + Math.floor(Math.random()*1e8);
