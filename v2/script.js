@@ -1,4 +1,4 @@
-const version = '2.30.2+454';
+const version = '2.30.3+458';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -52,7 +52,7 @@ function twitchAPIproxy(path, params) {
     return $.ajax({
         dataType: "json",
         url: "https://chatis.is2511.com/v2/twitch-api/?path=" + encodeURIComponent(path)
-            + '&params=' + encodeURIComponent(params)
+            + (params ? '&params=' + encodeURIComponent(params) : '')
     });
 }
 
@@ -652,18 +652,38 @@ var Chat = {
             }
 
             // Load badges
-            TwitchAPI('https://badges.twitch.tv/v1/badges/global/display').done(function(global) {
-                Object.entries(global.badge_sets).forEach(badge => {
-                    Object.entries(badge[1].versions).forEach(v => {
-                        Chat.info.badges[badge[0] + ':' + v[0]] = v[1].image_url_4x;
-                    });
-                });
-                TwitchAPI('https://badges.twitch.tv/v1/badges/channels/' + encodeURIComponent(Chat.info.channelID) + '/display').done(function(channel) {
-                    Object.entries(channel.badge_sets).forEach(badge => {
-                        Object.entries(badge[1].versions).forEach(v => {
-                            Chat.info.badges[badge[0] + ':' + v[0]] = v[1].image_url_4x;
-                        });
-                    });
+            twitchAPIproxy('/helix/chat/badges/global').done(function(global) {
+                if (!Array.isArray(global.data))
+                    return;
+                for (const badgeSet of global.data) {
+                    const badgeName = badgeSet.set_id;
+                    if (!Array.isArray(badgeSet.versions))
+                        continue;
+                    for (const badgeVersion of badgeSet.versions) {
+                        Chat.info.badges[badgeName + ':' + badgeVersion.id] = badgeVersion.image_url_4x;
+                    }
+                }
+                // Object.entries(global.badge_sets).forEach(badge => {
+                //     Object.entries(badge[1].versions).forEach(v => {
+                //         Chat.info.badges[badge[0] + ':' + v[0]] = v[1].image_url_4x;
+                //     });
+                // });
+                twitchAPIproxy('/helix/chat/badges', 'broadcaster_id=' + encodeURIComponent(Chat.info.channelID)).done(function(channel) {
+                    if (!Array.isArray(channel.data))
+                        return;
+                    for (const badgeSet of channel.data) {
+                        const badgeName = badgeSet.set_id;
+                        if (!Array.isArray(badgeSet.versions))
+                            continue;
+                        for (const badgeVersion of badgeSet.versions) {
+                            Chat.info.badges[badgeName + ':' + badgeVersion.id] = badgeVersion.image_url_4x;
+                        }
+                    }
+                    // Object.entries(channel.badge_sets).forEach(badge => {
+                    //     Object.entries(badge[1].versions).forEach(v => {
+                    //         Chat.info.badges[badge[0] + ':' + v[0]] = v[1].image_url_4x;
+                    //     });
+                    // });
                     $.getJSON('https://api.frankerfacez.com/v1/_room/id/' + encodeURIComponent(Chat.info.channelID)).done(function(res) {
                         if (res.room.moderator_badge) {
                             Chat.info.badges['moderator:1'] = 'https://cdn.frankerfacez.com/room-badge/mod/' + Chat.info.channel + '/4/rounded';
