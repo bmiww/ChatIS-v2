@@ -1,4 +1,4 @@
-const version = '2.30.6+461';
+const version = '2.30.7+462';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -173,8 +173,9 @@ var Chat = {
             const id = channelId;
             const seventvUser = await (await fetch(`https://7tv.io/v3/users/twitch/${id}`)).json();
             // TODO: Cache the result, avoid fetching this same endpoint again for emotes at load
-            const channelEmoteSetId = seventvUser.emote_set.id;
-            Chat.stv.channelEmoteSetId = channelEmoteSetId;
+            const channelEmoteSetId = ((seventvUser || {}).emote_set || {}).id;
+            if (channelEmoteSetId)
+                Chat.stv.channelEmoteSetId = channelEmoteSetId;
 
             let sse = new EventSource(`https://events.7tv.io/v3@entitlement.*<platform=TWITCH;ctx=channel;id=${id}>,cosmetic.*<platform=TWITCH;ctx=channel;id=${id}>,emote_set.*<platform=TWITCH;ctx=channel;id=${id}>,emote_set.update<object_id=${channelEmoteSetId}>`);
 
