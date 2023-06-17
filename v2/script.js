@@ -1,4 +1,4 @@
-const version = '2.30.5+460';
+const version = '2.30.6+461';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -505,7 +505,7 @@ var Chat = {
                 // Chat.info.emotes[emote.name] = Chat.stv.emoteToChatisEmote(emote, false);
                 endpoints.forEach((endpoint, index) => {
                     $.getJSON('https://7tv.io/v3/' + endpoint).done(function (res) {
-                        const emotes = (res.emotes || res.emote_set.emotes);
+                        const emotes = (res.emotes || (res.emote_set || {}).emotes) || [];
                         emotes.forEach(emoteWithMeta => {
                             const emote = emoteWithMeta.data;
                             Chat.info.emotes[emoteWithMeta.name] = Chat.stv.emoteToChatisEmote(emote,
