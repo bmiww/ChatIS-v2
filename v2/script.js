@@ -1,4 +1,4 @@
-const version = '2.30.7+462';
+const version = '2.30.8+463';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -280,7 +280,10 @@ var Chat = {
                 }   break;
 
                 case 'entitlement.create': {
-                    const username = data.body.object.user.username;
+                    // const username = data.body.object.user.username; // 7tv username, can be different
+                    const username = ((data.body.object.user.connections || [])
+                        .find(conn => conn.platform === "TWITCH") || {}).username
+                        || data.body.object.user.username;
                     switch (data.body.object.kind) {
                         // case 'AVATAR':
                         // case 'EMOTE_SET':
@@ -297,7 +300,9 @@ var Chat = {
                     // I'll deal with this later ig bruh
                 }   break;
                 case 'entitlement.delete': {
-                    const username = data.body.object.user.username;
+                    const username = ((data.body.object.user.connections || [])
+                            .find(conn => conn.platform === "TWITCH") || {}).username
+                        || data.body.object.user.username;
                     switch (data.body.object.kind) {
                         case 'BADGE':
                             Chat.stv.removeBadgeFromUserBadges(username, data.body.object.ref_id);
