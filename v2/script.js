@@ -1,4 +1,4 @@
-const version = '2.30.9+465';
+const version = '2.30.10+467';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -132,6 +132,7 @@ var Chat = {
         lines: []
     },
     cache: {
+        tts: new Map(),
         badges: {},
         globalMods: [],
         lastEmoteInMessage: null,
@@ -1787,40 +1788,52 @@ var Chat = {
                                 + text.substr(volumeMatch.index + volumeMatch[0].length);
                         }
                         text = text.substr('!chatis tts '.length);
-                        let init = {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json;charset=UTF-8'},
-                            mode: 'no-cors',
-                            body: JSON.stringify({
-                                voice: voice,
-                                text: text
-                            }),
-                        };
-                        fetch(url, init).then(function (response) {
-                            if (response.status !== 200)
-                                throw new Error('StreamLabsAPI error: ' + response);
 
-                            return response.json();
-                        }).then((data) => {
-                            // console.log(data);
-                            if (!data.success)
-                                throw new Error('StreamLabsAPI failed: ' + fetchResult)
+                        let speakUrl = false;
+                        if (Chat.cache.tts.has(text)) {
+                            speakUrl = Chat.cache.tts.get(text);
+                        } else {
+                            let init = {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json;charset=UTF-8'},
+                                mode: 'no-cors',
+                                body: JSON.stringify({
+                                    voice: voice,
+                                    text: text
+                                }),
+                            };
+                            fetch(url, init).then(function (response) {
+                                if (response.status !== 200)
+                                    throw new Error('StreamLabsAPI error: ' + response);
 
-                            let speakUrl = (data || {}).speak_url;
-                            if (speakUrl) {
-                                let id = ttsStorage.push(new Audio(speakUrl)) - 1;
-                                ttsStorage[id].addEventListener('canplaythrough', () => {
-                                    ttsStorage[id].volume = volume;
-                                    ttsStorage[id].play();
-                                });
-                                ttsStorage[id].addEventListener('ended', () => {
-                                    ttsStorage[id].remove();
-                                    ttsStorage[id] = null;
-                                });
-                            }
-                        }).catch(function (reason) {
-                            throw new Error('TTS error! Reason: ' + reason);
-                        });
+                                return response.json();
+                            }).then((data) => {
+                                // console.log(data);
+                                if (!data.success)
+                                    throw new Error('StreamLabsAPI failed: ' + fetchResult)
+
+                                let responseSpeakUrl = (data || {}).speak_url;
+                                if (responseSpeakUrl) {
+                                    speakUrl = responseSpeakUrl;
+                                    Chat.cache.tts.set(text, speakUrl);
+                                }
+                            }).catch(function (reason) {
+                                throw new Error('TTS error! Reason: ' + reason);
+                            });
+                        }
+
+                        if (speakUrl) {
+                            let id = ttsStorage.push(new Audio(speakUrl)) - 1;
+                            ttsStorage[id].addEventListener('canplaythrough', () => {
+                                ttsStorage[id].volume = volume;
+                                ttsStorage[id].play();
+                            });
+                            ttsStorage[id].addEventListener('ended', () => {
+                                ttsStorage[id].remove();
+                                ttsStorage[id] = null;
+                            });
+                        }
+
                     }
                         break;
                     case 'break':
