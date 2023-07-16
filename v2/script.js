@@ -1,4 +1,4 @@
-const version = '2.30.8+463';
+const version = '2.30.9+465';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -114,6 +114,7 @@ var Chat = {
         md_image: ('md_image' in $.QueryString ? ($.QueryString.md_image) : false),
         botNames: ('botNames' in $.QueryString ? $.QueryString.botNames : ""),
         lastEmoteBackground: ('last_emote_background' in $.QueryString ? ($.QueryString.last_emote_background.toLowerCase() === 'true') : false),
+        ttsReadsChat: false,
         emotes: {},
         badges: {},
         userBadges: {},
@@ -1750,7 +1751,21 @@ var Chat = {
                             '</iframe>', timeout, 0);
                     }
                         break;
+                    case 'tts-reads-chat': {
+                        if (!isThisOverlayVisible()) return;
+                        if (accessLevel < 1000) return;
+
+                        if (args[2] === 'on') {
+                            Chat.info.ttsReadsChat = true;
+                        } else if (args[2] === 'off') {
+                            Chat.info.ttsReadsChat = false;
+                        } else {
+                            Chat.info.ttsReadsChat = !Chat.info.ttsReadsChat;
+                        }
+                    } break;
                     case 'tts': {
+                        if (Chat.info.ttsReadsChat)
+                            accessLevel = 500;
                         if (!isThisOverlayVisible()) return;
                         // if (Chat.info.channel.toLowerCase() === 'mmattbtw') accessLevel = 500;
                         if (accessLevel < 500) return;
@@ -2073,7 +2088,21 @@ var Chat = {
 
                             Chat.cache.badges[nick.toLowerCase()] = message.tags.badges;
 
+                            let madeTts = false;
+                            if (Chat.info.ttsReadsChat) {
+                                if (!text.startsWith('!chatis ')) {
+                                    text = '!chatis tts ' + text;
+                                    message.params[1] = text;
+                                    madeTts = true;
+                                }
+                            }
+
                             Chat.parseCommand(message);
+
+                            if (madeTts) {
+                                text = text.substr('!chatis tts '.length);
+                                message.params[1] = text;
+                            }
 
                             if (!Chat.info.bots) {
                                 let bots = [];
