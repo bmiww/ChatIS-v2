@@ -1,4 +1,4 @@
-const version = '2.30.10+467';
+const version = '2.30.11+468';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1789,9 +1789,21 @@ var Chat = {
                         }
                         text = text.substr('!chatis tts '.length);
 
-                        let speakUrl = false;
+                        const speakUsingUrl = function (speakUrl) {
+                            let id = ttsStorage.push(new Audio(speakUrl)) - 1;
+                            ttsStorage[id].addEventListener('canplaythrough', () => {
+                                ttsStorage[id].volume = volume;
+                                ttsStorage[id].play();
+                            });
+                            ttsStorage[id].addEventListener('ended', () => {
+                                ttsStorage[id].remove();
+                                ttsStorage[id] = null;
+                            });
+                        }
+
                         if (Chat.cache.tts.has(text)) {
-                            speakUrl = Chat.cache.tts.get(text);
+                            let speakUrl = Chat.cache.tts.get(text);
+                            speakUsingUrl(speakUrl);
                         } else {
                             let init = {
                                 method: 'POST',
@@ -1814,23 +1826,12 @@ var Chat = {
 
                                 let responseSpeakUrl = (data || {}).speak_url;
                                 if (responseSpeakUrl) {
-                                    speakUrl = responseSpeakUrl;
+                                    let speakUrl = responseSpeakUrl;
                                     Chat.cache.tts.set(text, speakUrl);
+                                    speakUsingUrl(speakUrl);
                                 }
                             }).catch(function (reason) {
                                 throw new Error('TTS error! Reason: ' + reason);
-                            });
-                        }
-
-                        if (speakUrl) {
-                            let id = ttsStorage.push(new Audio(speakUrl)) - 1;
-                            ttsStorage[id].addEventListener('canplaythrough', () => {
-                                ttsStorage[id].volume = volume;
-                                ttsStorage[id].play();
-                            });
-                            ttsStorage[id].addEventListener('ended', () => {
-                                ttsStorage[id].remove();
-                                ttsStorage[id] = null;
                             });
                         }
 
