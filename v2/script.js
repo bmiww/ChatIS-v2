@@ -1,4 +1,4 @@
-const version = '2.30.11+468';
+const version = '2.30.12+470';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -959,15 +959,14 @@ var Chat = {
                 defaultColor = getCSSColorFromInt(paint.color);
             }
 
-            let dropShadow;
-            if (paint.drop_shadow) {
-                let shadow = paint.drop_shadow;
-                dropShadow = `drop-shadow(${shadow.x_offset}px ${shadow.y_offset}px ${shadow.radius}px ${getCSSColorFromInt(shadow.color)})`;
-            }
+            let dropShadow = '';
             if (paint.shadows) { // New from EventAPI v3 (removed paint.drop_shadow, paint.shadows is now an array)
                 for (const shadow of paint.shadows) {
                     dropShadow += `drop-shadow(${shadow.x_offset}px ${shadow.y_offset}px ${shadow.radius}px ${getCSSColorFromInt(shadow.color)}) `
                 }
+            } else if (paint.drop_shadow) {
+                let shadow = paint.drop_shadow;
+                dropShadow = `drop-shadow(${shadow.x_offset}px ${shadow.y_offset}px ${shadow.radius}px ${getCSSColorFromInt(shadow.color)})`;
             }
 
             userPaintCSS = {
@@ -980,7 +979,7 @@ var Chat = {
                 // 'text-shadow': 'none', // Removing global shadow (ChatIS setting)
             }
 
-            if (dropShadow)
+            if (dropShadow && (dropShadow !== ''))
                 userPaintCSS['filter'] = `${dropShadow};`;
             if (defaultColor)
                 userPaintCSS['color'] = `${defaultColor} !important;`;
