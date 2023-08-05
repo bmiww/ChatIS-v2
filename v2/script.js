@@ -44,10 +44,6 @@ function escapeHtml(message) {
         .replace(/(>)(?!\()/g, "&gt;");
 }
 
-function TwitchAPI(url) {
-    return $.getJSON(url + (url.search(/\?/) > -1 ? '&' : '?') + 'client_id=' + client_id);
-}
-
 function twitchAPIproxy(path, params) {
     return $.ajax({
         dataType: "json",
@@ -193,7 +189,7 @@ var Chat = {
             const data = JSON.parse(event.data);
             // console.log("ChatIS: [7tv] DISPATCH full:", data);
 
-            // Extended logs
+            // // Extended logs
             // switch (data.type) {
             //     case 'emote_set.create':
             //     // case 'emote_set.update':
@@ -262,11 +258,11 @@ var Chat = {
                 case 'cosmetic.create': {
                     switch (data.body.object.kind) {
                         case 'PAINT':
-                        case 'BADGE':
+                        case 'BADGE': {
                             let cosmetic = data.body.object.data;
                             cosmetic._kind = data.body.object.kind;
                             Chat.stv.cosmetics.set(data.body.object.id, cosmetic);
-                            break;
+                        } break;
                     }
                 }   break;
                 case 'cosmetic.update': {
@@ -291,6 +287,7 @@ var Chat = {
                         // case 'EMOTE_SET':
                         case 'BADGE':
                             Chat.stv.addBadgeToUserBadges(username, data.body.object.ref_id);
+                            break;
                         case 'PAINT':
                             if (!Chat.stv.userCosmetics.has(username))
                                 Chat.stv.userCosmetics.set(username, []);
@@ -308,6 +305,7 @@ var Chat = {
                     switch (data.body.object.kind) {
                         case 'BADGE':
                             Chat.stv.removeBadgeFromUserBadges(username, data.body.object.ref_id);
+                            break;
                         case 'PAINT':
                             if (Chat.stv.userCosmetics.has(username))
                                 Chat.stv.userCosmetics.set(username,
@@ -1048,6 +1046,7 @@ var Chat = {
             // Add data-* attributes based on roles
             let present_roles = [];
             for (let role in roles) {
+                // eslint-disable-next-line no-prototype-builtins
                 if (roles.hasOwnProperty(role)) {
                     if (roles[role]) {
                         present_roles.push(role);
@@ -1116,11 +1115,13 @@ var Chat = {
                         '1': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4c39207000564711868f3196cc0a8748/default/dark/1.0',
                     },
                 };
+                // eslint-disable-next-line no-prototype-builtins
                 if (Chat.cache.globalMods.includes(nick.toLowerCase()) || customBadges.hasOwnProperty(nick.toLowerCase())) {
                     let $badge = $('<img/>');
                     $badge.addClass('badge');
                     // if (badge.color) $badge.css('background-color', badge.color);
                     $badge.attr('src', defaultModBadge['3']);
+                    // eslint-disable-next-line no-prototype-builtins
                     if (customBadges.hasOwnProperty(nick.toLowerCase())) {
                         $badge.attr('src', customBadges[nick.toLowerCase()]['3']);
                     }
@@ -1186,12 +1187,13 @@ var Chat = {
             // Writing username
             var $username = $('<span></span>');
             $username.addClass('nick');
+            let color = '';
             if (typeof(info.color) === 'string') {
-                if (tinycolor(info.color).getBrightness() <= 50) var color = tinycolor(info.color).lighten(30);
-                else var color = info.color;
+                if (tinycolor(info.color).getBrightness() <= 50) color = tinycolor(info.color).lighten(30);
+                else color = info.color;
             } else {
                 const twitchColors = ["#FF0000", "#0000FF", "#008000", "#B22222", "#FF7F50", "#9ACD32", "#FF4500", "#2E8B57", "#DAA520", "#D2691E", "#5F9EA0", "#1E90FF", "#FF69B4", "#8A2BE2", "#00FF7F"];
-                var color = twitchColors[nick.charCodeAt(0) % 15];
+                color = twitchColors[nick.charCodeAt(0) % 15];
             }
             if (nick.toLowerCase() === '[chatis]') color = '#FFFFFF';
             $username.css('color', color);
@@ -1281,14 +1283,14 @@ var Chat = {
             if (info.bits && parseInt(info.bits) > 0) {
                 var bits = parseInt(info.bits);
                 var parsed = false;
-                for (cheerType of Object.entries(Chat.info.cheers)) {
+                for (let cheerType of Object.entries(Chat.info.cheers)) {
                     var regex = new RegExp(cheerType[0] + "\\d+\\s*", 'ig');
                     if (message.search(regex) > -1) {
                         message = message.replace(regex, '');
 
                         if (!parsed) {
                             var closest = 1;
-                            for (cheerTier of Object.keys(cheerType[1]).map(Number).sort((a, b) => a - b)) {
+                            for (let cheerTier of Object.keys(cheerType[1]).map(Number).sort((a, b) => a - b)) {
                                 if (bits >= cheerTier) closest = cheerTier;
                                 else break;
                             }
@@ -1821,7 +1823,7 @@ var Chat = {
                             }).then((data) => {
                                 // console.log(data);
                                 if (!data.success)
-                                    throw new Error('StreamLabsAPI failed: ' + fetchResult)
+                                    throw new Error('StreamLabsAPI failed:', data)
 
                                 let responseSpeakUrl = (data || {}).speak_url;
                                 if (responseSpeakUrl) {
@@ -1897,6 +1899,7 @@ var Chat = {
                 });
             },
             getStatus: () => {
+                // TODO: Check if we have enough perms and ask for more if we don't?
                 let controlLevel = Chat.obs.getControlLevel();
                 return new Promise((resolve, reject) => {
                     if (!window.obsstudio) resolve(null);
