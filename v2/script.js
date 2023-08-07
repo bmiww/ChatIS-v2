@@ -1,4 +1,4 @@
-const version = '2.31.0+472';
+const version = '2.31.1+473';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -2144,7 +2144,7 @@ var Chat = {
                                     'fossabot', 'scriptorex');
                                 // Some channel bots
                                 bots.push('roboweest')
-                                bots = bots.concat(Chat.info.botNames.split(' '));
+                                bots = bots.concat(Chat.info.botNames.split(',').flatMap(s => s.trim().split(' ')));
                                 bots = bots.map(username => username.toLowerCase());
                                 if (bots.includes(nick)) return;
 
