@@ -1,4 +1,4 @@
-const version = '2.30.12+470';
+const version = '2.30.13+471';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1113,6 +1113,11 @@ var Chat = {
                         '3': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4c39207000564711868f3196cc0a8748/default/dark/3.0',
                         '2': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4c39207000564711868f3196cc0a8748/default/dark/2.0',
                         '1': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4c39207000564711868f3196cc0a8748/default/dark/1.0',
+                    },
+                    'platonicthough': {
+                        '3': 'https://cdn.discordapp.com/attachments/1137946614116388874/1137947897925742592/SMIlima.png',
+                        // '2': '',
+                        // '1': '',
                     },
                 };
                 // eslint-disable-next-line no-prototype-builtins
