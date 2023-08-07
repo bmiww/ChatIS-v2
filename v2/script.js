@@ -1,4 +1,4 @@
-const version = '2.30.13+471';
+const version = '2.31.0+472';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -110,6 +110,7 @@ var Chat = {
         md_image: ('md_image' in $.QueryString ? ($.QueryString.md_image) : false),
         botNames: ('botNames' in $.QueryString ? $.QueryString.botNames : ""),
         lastEmoteBackground: ('last_emote_background' in $.QueryString ? ($.QueryString.last_emote_background.toLowerCase() === 'true') : false),
+        reverseLineOrder: ('reverse_line_order' in $.QueryString ? ($.QueryString.reverse_line_order.toLowerCase() === 'true') : false),
         ttsReadsChat: false,
         emotes: {},
         badges: {},
@@ -654,6 +655,14 @@ var Chat = {
                     rel: "stylesheet",
                     type: "text/css",
                     href: "styles/variant_hideNames.css"
+                }).appendTo("head");
+            }
+
+            if (Chat.info.reverseLineOrder) {
+                $("<link/>", {
+                    rel: "stylesheet",
+                    type: "text/css",
+                    href: "styles/variant_ReverseLineOrder.css"
                 }).appendTo("head");
             }
 
