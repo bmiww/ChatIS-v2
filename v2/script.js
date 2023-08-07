@@ -178,7 +178,7 @@ var Chat = {
 
             let sse = new EventSource(`https://events.7tv.io/v3@entitlement.*<platform=TWITCH;ctx=channel;id=${id}>,cosmetic.*<platform=TWITCH;ctx=channel;id=${id}>,emote_set.*<platform=TWITCH;ctx=channel;id=${id}>,emote_set.update<object_id=${channelEmoteSetId}>`);
 
-            console.log("ChatIS: [7tv] Connected to EventAPI v3. Channel emote set id:", channelEmoteSetId);
+            console.log("ChatIS: [7tv] Connected to EventAPI v3. Channel emote set id:", channelEmoteSetId, "Channel id:", id);
 
             // sse.onmessage = Chat.stv.handleEvent;
             sse.addEventListener("dispatch", Chat.stv.handleDispatchEvent);
