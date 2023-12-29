@@ -128,7 +128,7 @@
                         <input type="checkbox" name="animate">
                     </div>
                     <div class="form_row right">
-                        <label for="bots">Show bots</label>
+                        <label for="bots">Show bots & commands</label>
                         <input type="checkbox" name="bots">
                     </div>
                     <div class="form_row right">
