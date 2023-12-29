@@ -209,28 +209,6 @@
 
     </section>
 
-    <?php
-//    // This is only shown 50% of the time page loads, randomly
-//    if (rand(0, 1) == 1) {
-//        echo '
-//    <div id="mmatt_ai-tts_banner">
-//        <a href="https://solrock.mmattdonk.com/" target="_blank" style="display: flex;">
-//            <img src="img/mmatt_ai-tts_banner_1.5x.png" alt="AI TTS (mmatt) ad" style="margin: auto;">
-//        </a>
-//        <p style="font-size: 1rem; text-align: center; color: gray; margin-top: -20px;">
-//            this is a non-paid advertisement that only shows up 50% of the time you visit the page. thanks!
-//        </p>
-//    </div>';
-//    }
-    ?>
-    <div id="mmatt_ai-tts_banner">
-        <a href="https://solrock.mmattdonk.com/" target="_blank" style="display: flex;">
-            <img src="img/mmatt_ai-tts_banner_1.5x.png" alt="AI TTS (mmatt) ad" style="margin: auto;">
-        </a>
-        <p style="font-size: 1rem; text-align: center; color: gray; margin-top: -20px;">
-            this is a non-paid advertisement meant to recommend new streamer tools, thanks!
-        </p>
-    </div>
 
     <h2>❓ Have a request? ❓</h2>
     <h2>🐞 Found a bug? 🐞</h2>
