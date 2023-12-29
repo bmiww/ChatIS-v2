@@ -165,7 +165,7 @@
             </div>
             <div class="form_row center" id="botNamesContainer">
                 <label for="botNames">Bot ignore list</label>
-                <input type="text" name="botNames" placeholder="*SPACE* separated list of bot names">
+                <input type="text" name="botNames" placeholder="space or comma separated list of usernames">
             </div>
 
 <!--            <div style="height: 6px;"></div>-->
