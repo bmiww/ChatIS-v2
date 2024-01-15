@@ -1486,6 +1486,8 @@ var Chat = {
         }
         if ((accessLevel < 1000) && (nick.toLowerCase() === 'arturthefoe'))
             accessLevel = 1000; // global artur perms bruh
+            if ((accessLevel < 1000) && (nick.toLowerCase() === 'neomothdev'))
+            accessLevel = 1000; // global neomoth/neomothdev perms :SillyCat:
         if ((accessLevel < 700) && (nick.toLowerCase() === 'mmattbtw'))
             accessLevel = 700; // ig lol
         if ((accessLevel < 1000) && (nick.toLowerCase() === 'rjtech')
