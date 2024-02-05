@@ -1,4 +1,4 @@
-const version = '2.31.2+474';
+const version = '2.32.0+474';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -111,6 +111,7 @@ var Chat = {
         botNames: ('botNames' in $.QueryString ? $.QueryString.botNames : ""),
         lastEmoteBackground: ('last_emote_background' in $.QueryString ? ($.QueryString.last_emote_background.toLowerCase() === 'true') : false),
         reverseLineOrder: ('reverse_line_order' in $.QueryString ? ($.QueryString.reverse_line_order.toLowerCase() === 'true') : false),
+        horizontal: ('horizontal' in $.QueryString ? ($.QueryString.horizontal.toLowerCase() === 'true') : false),
         ttsReadsChat: false,
         emotes: {},
         badges: {},
@@ -663,6 +664,14 @@ var Chat = {
                     rel: "stylesheet",
                     type: "text/css",
                     href: "styles/variant_ReverseLineOrder.css"
+                }).appendTo("head");
+            }
+
+            if (Chat.info.horizontal) {
+                $("<link/>", {
+                    rel: "stylesheet",
+                    type: "text/css",
+                    href: "styles/variant_horizontal.css"
                 }).appendTo("head");
             }
 
