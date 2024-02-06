@@ -1,4 +1,4 @@
-const version = '2.32.0+474';
+const version = '2.32.1+476';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -795,14 +795,14 @@ var Chat = {
             var lines = Chat.info.lines.join('');
 
             if (Chat.info.animate) {
-                var $auxDiv = $('<div></div>', { class: "hidden" }).appendTo("#chat_container");
+                let $auxDiv = $('<div></div>', { class: "hidden" }).appendTo("#chat_container");
                 $auxDiv.append(lines);
-                var auxHeight = $auxDiv.height();
+                let auxSize = Chat.info.horizontal ? $auxDiv.width() : $auxDiv.height();
                 $auxDiv.remove();
 
-                var $animDiv = $('<div></div>');
+                let $animDiv = $('<div></div>');
                 $('#chat_container').append($animDiv);
-                $animDiv.animate({ "height": auxHeight }, 150, function() {
+                $animDiv.animate(Chat.info.horizontal ? { "width": auxSize } : { "height": auxSize }, 150, function() {
                     $(this).remove();
                     $('#chat_container').append(lines);
                 });
