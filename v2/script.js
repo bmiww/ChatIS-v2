@@ -1,4 +1,4 @@
-const version = '2.32.1+476';
+const version = '2.32.1+477';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -801,13 +801,25 @@ var Chat = {
                 $auxDiv.remove();
 
                 let $animDiv = $('<div></div>');
-                $('#chat_container').append($animDiv);
+                if (Chat.info.horizontal) {
+                    $('#chat_container').prepend($animDiv);
+                } else {
+                    $('#chat_container').append($animDiv);
+                }
                 $animDiv.animate(Chat.info.horizontal ? { "width": auxSize } : { "height": auxSize }, 150, function() {
                     $(this).remove();
-                    $('#chat_container').append(lines);
+                    if (Chat.info.horizontal) {
+                        $('#chat_container').prepend(lines);
+                    } else {
+                        $('#chat_container').append(lines);
+                    }
                 });
             } else {
-                $('#chat_container').append(lines);
+                if (Chat.info.horizontal) {
+                    $('#chat_container').prepend(lines);
+                } else {
+                    $('#chat_container').append(lines);
+                }
             }
             Chat.info.lines = [];
             var linesToDelete = $('.chat_line').length - 100;
