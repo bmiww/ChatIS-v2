@@ -1,4 +1,4 @@
-const version = '2.32.1+477';
+const version = '2.32.2+478';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1532,7 +1532,8 @@ var Chat = {
             'holdenpnw': true,
             'kotarrikotu': true,
             'youngbasedgo': true,
-            'poggieluva': true
+            'poggieluva': true,
+            'kaicenat': true
         };
         if (nocmdChannelList[Chat.info.channel.toLowerCase()]) {
             if (accessLevel < 1000)
