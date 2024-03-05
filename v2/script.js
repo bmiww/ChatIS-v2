@@ -1,4 +1,4 @@
-const version = '2.32.3+479';
+const version = '2.32.4+480';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -2170,7 +2170,12 @@ var Chat = {
                                     'thepositivebot', 'kunszgbot', 'vjbotardo', 'feelsokaybot',
                                     'fossabot', 'scriptorex');
                                 // Some channel bots
-                                bots.push('roboweest')
+                                bots.push(
+                                    // Owner: Weest (@weest@twitch.tv), channel bot
+                                    'roboweest',
+                                    // Owner: relaxo (@retrorelaxo@twitch.tv)
+                                    'cvk3'
+                                )
                                 bots = bots.concat(Chat.info.botNames.split(',').flatMap(s => s.trim().split(' ')));
                                 bots = bots.map(username => username.toLowerCase());
                                 if (bots.includes(nick)) return;
