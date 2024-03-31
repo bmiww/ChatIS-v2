@@ -1,4 +1,4 @@
-const version = '2.32.4+480';
+const version = '2.32.5+481';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1356,6 +1356,7 @@ var Chat = {
             let now = new Date();
             // April 1st
             const bgImage = $('#bg-image');
+            bgImage.css('opacity', '0.5');
             if ((now.getDate() === 1 && now.getMonth() === 3) || Chat.info.lastEmoteBackground) {
                 if (Chat.info.channel.toLowerCase() !== 'weest') {
                     bgImage.attr('src', Chat.cache.lastEmoteInMessageLink);
