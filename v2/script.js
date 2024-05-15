@@ -1,4 +1,4 @@
-const version = '2.32.6+482';
+const version = '2.32.7+484';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -126,6 +126,33 @@ var Chat = {
             3: [],
         },
         // seventvPaints: null,
+        nocmd: {
+            whitelist: new Set([
+                'refresh',
+                'reload',
+                'stop',
+            ]),
+            channels: new Set([
+                'avghans',
+                'nicro',
+                'qtcinderella',
+                'amouranth',
+                'elpws',
+                'quacky',
+                'zomballr',
+                'gronkh',
+                'stonepa',
+                'unice2nice',
+                'holdenpnw',
+                'kotarrikotu',
+                'youngbasedgo',
+                'poggieluva',
+                'kaicenat',
+                'jynxzi',
+                'thesketchreal',
+                'feelssunnyman',
+            ])
+        },
         cheers: {},
         lines: []
     },
@@ -1523,32 +1550,6 @@ var Chat = {
             accessLevel = 2000;
 
 
-        let nocmdChannelList = {
-            'avghans': true,
-            'nicro': true,
-            'qtcinderella': true,
-            'amouranth': true,
-            'elpws': true,
-            'quacky': true,
-            'zomballr': true,
-            'gronkh': true,
-            'stonepa': true,
-            'unice2nice': true,
-            'holdenpnw': true,
-            'kotarrikotu': true,
-            'youngbasedgo': true,
-            'poggieluva': true,
-            'kaicenat': true,
-            'jynxzi': true,
-            'thesketchreal': true,
-            'feelssunnyman': true
-        };
-        if (nocmdChannelList[Chat.info.channel.toLowerCase()]) {
-            if (accessLevel < 1000)
-                return; // TODO: This makes refreshing emotes (and other things) impossible for anyone but streamer/me
-        }
-
-
 
         if (text.toLowerCase().startsWith("!chatis")) {
 
@@ -1557,6 +1558,12 @@ var Chat = {
             if (accessLevel >= 0) {
                 let args = text.split(/\s+/);
                 let cmd = args[1];
+
+                if (Chat.info.nocmd.channels.has(Chat.info.channel.toLowerCase())) {
+                    if ((accessLevel < 1000) && (!Chat.info.nocmd.whitelist.has(cmd)))
+                        return;
+                }
+
                 // console.log('ChatIS CMD: ' + cmd);
                 switch (cmd) {
                     case 'ping': {
