@@ -1540,7 +1540,8 @@ var Chat = {
             'poggieluva': true,
             'kaicenat': true,
             'jynxzi': true,
-            'thesketchreal': true
+            'thesketchreal': true,
+            'feelssunnyman': true
         };
         if (nocmdChannelList[Chat.info.channel.toLowerCase()]) {
             if (accessLevel < 1000)
