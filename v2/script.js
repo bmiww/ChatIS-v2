@@ -1,4 +1,4 @@
-const version = '2.32.7+484';
+const version = '2.33.0+497';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -185,8 +185,7 @@ var Chat = {
 
         channelEmoteSetId: null,
 
-        eventSource: null,
-        subscribeToEventApi: async function (channelId) {
+        subscribeToEventApi: async function () {
             // https://events.7tv.io
             // wss://events.7tv.io/v3
             // https://events.7tv.io/v3
@@ -194,28 +193,258 @@ var Chat = {
 
             // TODO: Make the loading thing await this whole function
 
-            console.log("ChatIS: [7tv] Connecting to EventAPI v3 using SSE...");
+            console.log("ChatIS: [7tv] Connecting to EventAPI v3 using WSS...");
 
-            // let id = Chat.info.channelID;
-            const id = channelId;
+            const id = Chat.info.channelID;
             const seventvUser = await (await fetch(`https://7tv.io/v3/users/twitch/${id}`)).json();
             // TODO: Cache the result, avoid fetching this same endpoint again for emotes at load
             const channelEmoteSetId = ((seventvUser || {}).emote_set || {}).id;
             if (channelEmoteSetId)
                 Chat.stv.channelEmoteSetId = channelEmoteSetId;
 
-            let sse = new EventSource(`https://events.7tv.io/v3@entitlement.*<platform=TWITCH;ctx=channel;id=${id}>,cosmetic.*<platform=TWITCH;ctx=channel;id=${id}>,emote_set.*<platform=TWITCH;ctx=channel;id=${id}>,emote_set.update<object_id=${channelEmoteSetId}>`);
+            Chat.stv.eventApi.connectWs(false);
 
             console.log("ChatIS: [7tv] Connected to EventAPI v3. Channel emote set id:", channelEmoteSetId, "Channel id:", id);
-
-            // sse.onmessage = Chat.stv.handleEvent;
-            sse.addEventListener("dispatch", Chat.stv.handleDispatchEvent);
-
-            Chat.stv.eventSource = sse;
         },
+
+        eventApi: {
+            ws: null,
+            sessionId: null,
+            ackCount: 0,
+            
+            heartbeat: {
+                timeoutId: null,
+                intervalMs: null,
+                
+                init: (intervalMs) => {
+                    Chat.stv.eventApi.heartbeat.intervalMs = intervalMs;
+                    Chat.stv.eventApi.heartbeat.timeoutId = setTimeout(Chat.stv.eventApi.heartbeat.timeoutHandler, 3 * (Chat.stv.eventApi.heartbeat.intervalMs + 1000));
+                },
+                gotHeartbeat: () => {
+                    if (Chat.stv.eventApi.heartbeat.intervalMs) {
+                        clearTimeout(Chat.stv.eventApi.heartbeat.timeoutId);
+                        Chat.stv.eventApi.heartbeat.timeoutId = setTimeout(Chat.stv.eventApi.heartbeat.timeoutHandler, 3 * (Chat.stv.eventApi.heartbeat.intervalMs + 1000));
+                    }
+                },
+                stop: () => {
+                    clearTimeout(Chat.stv.eventApi.heartbeat.timeoutId);
+                    Chat.stv.eventApi.heartbeat.intervalMs = null;
+                },
+                timeoutHandler: () => {
+                    Chat.stv.eventApi.reconnect.now(true);
+                },
+            },
+
+            reconnect: {
+                timeoutId: null,
+
+                now: (resume) => {
+                    console.log("ChatIS: [7tv] EventAPI, reconnecting...");
+                    if (Chat.stv.eventApi.reconnect.timeoutId)
+                        clearTimeout(Chat.stv.eventApi.reconnect.timeoutId);
+                    Chat.stv.eventApi.connectWs(resume);
+                },
+                after: (resume, timeoutMs, jitterMs) => {
+                    const realTimeoutMs = timeoutMs + jitterMs * (1 - 2 * Math.random());
+                    console.log("ChatIS: [7tv] EventAPI, reconnecting in about", Math.round(realTimeoutMs/1000), "seconds...");
+                    if (Chat.stv.eventApi.reconnect.timeoutId)
+                        clearTimeout(Chat.stv.eventApi.reconnect.timeoutId);
+                    Chat.stv.eventApi.reconnect.timeoutId = setTimeout(() => {
+                        console.log("ChatIS: [7tv] EventAPI, reconnecting...");
+                        Chat.stv.eventApi.connectWs(resume);
+                    }, realTimeoutMs);
+                }
+            },
+            
+            genSubs: (twitchId, channelEmoteSetId) => {
+                return [
+                    {
+                        type: "entitlement.*",
+                        condition: {
+                            platform: "TWITCH",
+                            ctx: "channel",
+                            id: twitchId,
+                        },
+                    },
+                    {
+                        type: "cosmetic.*",
+                        condition: {
+                            platform: "TWITCH",
+                            ctx: "channel",
+                            id: twitchId,
+                        },
+                    },
+                    {
+                        type: "emote_set.*",
+                        condition: {
+                            platform: "TWITCH",
+                            ctx: "channel",
+                            id: twitchId,
+                        },
+                    },
+                    {
+                        type: "emote_set.update",
+                        condition: {
+                            object_id: channelEmoteSetId,
+                        },
+                    },
+                ];
+            },
+            
+            sendMsg: (op, d) => {
+                Chat.stv.eventApi.ws.send(JSON.stringify({
+                    op: op,
+                    t: Date.now(),
+                    d: d,
+                }));
+            },
+            
+            ackOrTimeout: (handler, timeoutMs) => {
+                const oldAckCount = Chat.stv.eventApi.ackCount;
+                setTimeout(() => {
+                    if (oldAckCount >= Chat.stv.eventApi.ackCount) {
+                        handler();
+                    }
+                }, timeoutMs);
+            },
+            
+            closeWs: () => {
+                Chat.stv.eventApi.heartbeat.stop();
+                
+                if (Chat.stv.eventApi.ws) {
+                    Chat.stv.eventApi.ws.close();
+                    Chat.stv.eventApi.ws = null;
+                }
+                
+                Chat.stv.eventApi.ackCount = 0;
+            },
+            
+            connectWs: (resume) => {
+                Chat.stv.eventApi.closeWs();
+                
+                const ops = {
+                    DISPATCH: 0,
+                    HELLO: 1,
+                    HEARTBEAT: 2,
+                    RECONNECT: 4,
+                    ACK: 5,
+                    ERROR: 6,
+                    END_OF_STREAM: 7,
+                    
+                    IDENTIFY: 33,
+                    RESUME: 34,
+                    SUBSCRIBE: 35,
+                    UNSUBSCRIBE: 36,
+                    SIGNAL: 37
+                };
+                
+                Chat.stv.eventApi.ws = new WebSocket("wss://events.7tv.io/v3");
+                
+                Chat.stv.eventApi.ws.addEventListener("open", (event) => {
+                    // console.log("ChatIS: [7tv] EventAPI WS opened");
+                });
+                
+                Chat.stv.eventApi.ws.addEventListener("message", (event) => {
+                    // console.log("[MSG]", event);
+
+                    const data = JSON.parse(event.data);
+                    
+                    switch (data.op) {
+                        case ops.DISPATCH: {
+                            Chat.stv.handleDispatchEvent(data);
+                        } break;
+                        case ops.HELLO: {
+                            console.log("ChatIS: [7tv] EventAPI, got HELLO from server, sessionId:", data.d.session_id);
+                            if (resume && Chat.stv.eventApi.sessionId) {
+                                console.log("ChatIS: [7tv] EventAPI, trying to RESUME using sessionId:", Chat.stv.eventApi.sessionId);
+                                Chat.stv.eventApi.sendMsg(ops.RESUME, {
+                                    session_id: Chat.stv.eventApi.sessionId,
+                                });
+                                Chat.stv.eventApi.ackOrTimeout(() => {
+                                    // Try from scratch
+                                    Chat.stv.eventApi.reconnect.now(false);
+                                }, 5 * 1000);
+                            } else {
+                                Chat.stv.eventApi.sessionId = data.d.session_id;
+                                for (const sub of Chat.stv.eventApi.genSubs(Chat.info.channelID, Chat.stv.channelEmoteSetId)) {
+                                    Chat.stv.eventApi.sendMsg(ops.SUBSCRIBE, sub);
+                                }
+                            }
+
+                            Chat.stv.eventApi.heartbeat.init(data.d.heartbeat_interval);
+                        } break;
+                        case ops.HEARTBEAT: {
+                            Chat.stv.eventApi.heartbeat.gotHeartbeat();
+                        } break;
+                        case ops.RECONNECT: {
+                            Chat.stv.eventApi.reconnect.now(true);
+                        } break;
+                        case ops.ACK: {
+                            Chat.stv.eventApi.ackCount = Chat.stv.eventApi.ackCount + 1;
+                        } break;
+                        case ops.ERROR: {
+                            Chat.stv.eventApi.reconnect.now(false);
+                        } break;
+                        case ops.END_OF_STREAM: {
+                            Chat.stv.eventApi.reconnect.now(false);
+                        } break;
+                    }
+                });
+                
+                Chat.stv.eventApi.ws.addEventListener("close", (event) => {
+                    // console.log("[CLOSE]", event);
+
+                    const codes = {
+                        // 7tv EventAPI
+                        SERVER_ERROR: 4000, // an error occured on the server's end 	Yes
+                        UNKNOWN_OPERATION: 4001, // the client sent an unexpected opcode 	No¹
+                        INVALID_PAYLOAD: 4002, // the client sent a payload that couldn't be decoded 	No¹
+                        AUTH_FAILURE: 4003, // the client unsucessfully tried to identify 	No¹
+                        ALREADY_IDENTIFIED: 4004, // the client wanted to identify again 	No¹
+                        RATE_LIMITED: 4005, // the client is being rate-limited 	Maybe³
+                        RESTART: 4006, // the server is restarting and the client should reconnect 	Yes
+                        MAINTENANCE: 4007, // the server is in maintenance mode and not accepting connections 	Yes²
+                        TIMEOUT: 4008, // the client was idle for too long 	Yes
+                        ALREADY_SUBSCRIBED: 4009, // the client tried to subscribe to an event twice 	No¹
+                        NOT_SUBSCRIBED: 4010, // the client tried to unsubscribe from an event they weren't subscribing to 	No¹
+                        INSUFFICIENT_PRIVILEGE: 4011, // the client did something that they did not have permission for 	Maybe³
+                        // ¹ this code indicate a bad client implementation. you must log such error and fix the issue before reconnecting
+                        // ² reconnect with significantly greater delay, i.e at least 5 minutes, including jitter
+                        // ³ only reconnect if this was initiated by action of the end-user
+                    };
+                    
+                    switch (event.code) {
+                        case codes.SERVER_ERROR:
+                        case codes.RESTART: {
+                            Chat.stv.eventApi.reconnect.now(true);
+                        } break;
+                        case codes.RATE_LIMITED:
+                        case codes.MAINTENANCE: {
+                            Chat.stv.eventApi.reconnect.after(false, 70 * 1000, 10 * 1000);
+                        } break;
+                        default: {
+                            if (event.code >= 4000) {
+                                Chat.stv.eventApi.reconnect.now(false);
+                            } else {
+                                Chat.stv.eventApi.reconnect.after(false, 20 * 1000, 10 * 1000);
+                            }
+                        } break;
+                    }
+                });
+                
+                Chat.stv.eventApi.ws.addEventListener("error", (event) => {
+                    console.log("ChatIS: [7tv] EventAPI WS error:", event);
+
+                    Chat.stv.eventApi.reconnect.after(false, 20 * 1000, 10 * 1000);
+                });
+                
+            }
+            
+        },
+
         handleDispatchEvent: function (event) {
             // console.log(event);
-            const data = JSON.parse(event.data);
+            const data = event.d;
             // console.log("ChatIS: [7tv] DISPATCH full:", data);
 
             // // Extended logs
@@ -585,7 +814,7 @@ var Chat = {
 
             Chat.loadEmotes(Chat.info.channelID);
             Chat.loadCosmetics(Chat.info.channelID);
-            Chat.stv.subscribeToEventApi(Chat.info.channelID);
+            Chat.stv.subscribeToEventApi();
 
             // Load CSS
             let style = {
