@@ -1,4 +1,4 @@
-const version = '2.33.2+503';
+const version = '2.33.3+504';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -234,6 +234,31 @@ var Chat = {
             ws: null,
             sessionId: null,
             ackCount: 0,
+
+            wsCloseCodes: {
+                OK: 1000,
+                NO_CODE_PROVIDED: 1005,
+
+                // ChatIS
+                CHATIS_RECONNECTING: 4101,
+
+                // 7tv EventAPI
+                SERVER_ERROR: 4000, // an error occured on the server's end 	Yes
+                UNKNOWN_OPERATION: 4001, // the client sent an unexpected opcode 	No¹
+                INVALID_PAYLOAD: 4002, // the client sent a payload that couldn't be decoded 	No¹
+                AUTH_FAILURE: 4003, // the client unsucessfully tried to identify 	No¹
+                ALREADY_IDENTIFIED: 4004, // the client wanted to identify again 	No¹
+                RATE_LIMITED: 4005, // the client is being rate-limited 	Maybe³
+                RESTART: 4006, // the server is restarting and the client should reconnect 	Yes
+                MAINTENANCE: 4007, // the server is in maintenance mode and not accepting connections 	Yes²
+                TIMEOUT: 4008, // the client was idle for too long 	Yes
+                ALREADY_SUBSCRIBED: 4009, // the client tried to subscribe to an event twice 	No¹
+                NOT_SUBSCRIBED: 4010, // the client tried to unsubscribe from an event they weren't subscribing to 	No¹
+                INSUFFICIENT_PRIVILEGE: 4011, // the client did something that they did not have permission for 	Maybe³
+                // ¹ this code indicate a bad client implementation. you must log such error and fix the issue before reconnecting
+                // ² reconnect with significantly greater delay, i.e at least 5 minutes, including jitter
+                // ³ only reconnect if this was initiated by action of the end-user
+            },
             
             heartbeat: {
                 timeoutId: null,
@@ -273,7 +298,7 @@ var Chat = {
                     if (Chat.stv.eventApi.reconnect.timeoutId)
                         clearTimeout(Chat.stv.eventApi.reconnect.timeoutId);
                     Chat.stv.eventApi.reconnect.timeoutId = setTimeout(() => {
-                        console.log("ChatIS: [7tv] EventAPI, reconnecting...");
+                        console.log("ChatIS: [7tv] EventAPI, reconnecting as scheduled...");
                         Chat.stv.eventApi.connectWs(resume);
                     }, realTimeoutMs);
                 }
@@ -335,7 +360,7 @@ var Chat = {
                 Chat.stv.eventApi.heartbeat.stop();
                 
                 if (Chat.stv.eventApi.ws) {
-                    Chat.stv.eventApi.ws.close();
+                    Chat.stv.eventApi.ws.close(Chat.stv.eventApi.wsCloseCodes.CHATIS_RECONNECTING, "ChatIS reconnecting");
                     Chat.stv.eventApi.ws = null;
                 }
                 
@@ -417,27 +442,13 @@ var Chat = {
                 Chat.stv.eventApi.ws.addEventListener("close", (event) => {
                     // console.log("[CLOSE]", event);
 
-                    const codes = {
-                        // 7tv EventAPI
-                        SERVER_ERROR: 4000, // an error occured on the server's end 	Yes
-                        UNKNOWN_OPERATION: 4001, // the client sent an unexpected opcode 	No¹
-                        INVALID_PAYLOAD: 4002, // the client sent a payload that couldn't be decoded 	No¹
-                        AUTH_FAILURE: 4003, // the client unsucessfully tried to identify 	No¹
-                        ALREADY_IDENTIFIED: 4004, // the client wanted to identify again 	No¹
-                        RATE_LIMITED: 4005, // the client is being rate-limited 	Maybe³
-                        RESTART: 4006, // the server is restarting and the client should reconnect 	Yes
-                        MAINTENANCE: 4007, // the server is in maintenance mode and not accepting connections 	Yes²
-                        TIMEOUT: 4008, // the client was idle for too long 	Yes
-                        ALREADY_SUBSCRIBED: 4009, // the client tried to subscribe to an event twice 	No¹
-                        NOT_SUBSCRIBED: 4010, // the client tried to unsubscribe from an event they weren't subscribing to 	No¹
-                        INSUFFICIENT_PRIVILEGE: 4011, // the client did something that they did not have permission for 	Maybe³
-                        // ¹ this code indicate a bad client implementation. you must log such error and fix the issue before reconnecting
-                        // ² reconnect with significantly greater delay, i.e at least 5 minutes, including jitter
-                        // ³ only reconnect if this was initiated by action of the end-user
-                    };
+                    const codes = Chat.stv.eventApi.wsCloseCodes;
 
                     const codeToStr = (code) => {
                         switch (code) {
+                            case codes.OK: return "OK";
+                            case codes.NO_CODE_PROVIDED: return "NO_CODE_PROVIDED";
+                            case codes.CHATIS_RECONNECTING: return "CHATIS_RECONNECTING";
                             case codes.SERVER_ERROR: return "SERVER_ERROR";
                             case codes.UNKNOWN_OPERATION: return "UNKNOWN_OPERATION";
                             case codes.INVALID_PAYLOAD: return "INVALID_PAYLOAD";
@@ -455,6 +466,10 @@ var Chat = {
                     }
                     
                     switch (event.code) {
+                        case codes.CHATIS_RECONNECTING: {
+                            // Us closing the socket during a reconnect
+                            // Do nothing
+                        } break;
                         case codes.SERVER_ERROR:
                         case codes.RESTART: {
                             Chat.stv.eventApi.reconnect.now(true, `closed with ${codeToStr(event.code)}`);
