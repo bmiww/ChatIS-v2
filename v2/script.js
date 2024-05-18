@@ -1,4 +1,4 @@
-const version = '2.33.0+497';
+const version = '2.33.1+502';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -126,6 +126,29 @@ var Chat = {
             3: [],
         },
         // seventvPaints: null,
+        chatisBadges: {
+            urlPrefix: 'https://chatis.is2511.com/v2/badges',
+            modBadge: new Map([3, 2, 1].map((size) => {
+                return [`${size}`, `https://chatis.is2511.com/v2/badges/chatis-mod/${size}x.png`];
+            })),
+            userBadges: new Map([
+                ['is2511', 'webp', [3, 2, 1]],
+                ['arturthefoe', 'png', [3, 2, 1]],
+                ['shooksby', 'png', [3, 2, 1]],
+                ['dj_ziggy', 'png', [3]],
+                ['liptongod', 'webp', [3, 2, 1]],
+                ['itsbandorax', 'webp', [3, 2, 1]],
+                ['styles', 'webp', [3, 2, 1]],
+                ['truer', 'png', [3, 2, 1]],
+                ['platonicthough', 'png', [3]]
+            ].map((badge) => {
+                const [username, ext, sizes] = badge;
+                return [username, new Map(sizes.map((size) => {
+                    return [`${size}`, `https://chatis.is2511.com/v2/badges/users/${username}/${size}x.${ext}`];
+                }))];
+            })),
+            
+        },
         nocmd: {
             whitelist: new Set([
                 'refresh',
@@ -1354,76 +1377,25 @@ var Chat = {
                     });
                 }
             } else {
-                // Adding ChatIS mod badge
-                const defaultModBadge = {
-                    '3': 'https://cdn.discordapp.com/attachments/878072017205747722/895118310478336040/MODS_72.png',
-                    '2': 'https://cdn.discordapp.com/attachments/878072017205747722/895118308582494239/MODS_36.png',
-                    '1': 'https://cdn.discordapp.com/attachments/878072017205747722/895118299782873148/MODS_18.png',
-                };
-                const customBadges = {
-                    'arturthefoe': {
-                        '3': 'https://cdn.discordapp.com/attachments/856430535928446996/895117975902883850/CAT3x_sRGB.png',
-                        '2': 'https://cdn.discordapp.com/attachments/856430535928446996/895117999361654784/CAT2x_sRGB.png',
-                        '1': 'https://cdn.discordapp.com/attachments/856430535928446996/895118021327212584/CAT1x_sRGB.png',
-                    },
-                    'shooksby': {
-                        '3': 'https://cdn.discordapp.com/attachments/881753904616996915/899467177634181140/garf3x.png',
-                        '2': 'https://cdn.discordapp.com/attachments/881753904616996915/899467175985819718/garf2x.png',
-                        '1': 'https://cdn.discordapp.com/attachments/881753904616996915/899467174354247700/garf1x.png',
-                    },
-                    'dj_ziggy': {
-                        '3': 'https://cdn.discordapp.com/attachments/899831580720263179/946925293002719303/Ziggy_chatis_.png',
-                    },
-                    'liptongod': {
-                        // $badge.attr('src', 'https://media.discordapp.net/attachments/987445091893403658/987445194578354186/ezgif72_5.png');
-                        // // https://media.discordapp.net/attachments/987445091893403658/987445194318299266/ezgif36_5.png
-                        // // https://media.discordapp.net/attachments/987445091893403658/987445194087604224/ezgif18_5.png
-                        // $badge.attr('src', 'https://cdn.7tv.app/emote/60e8677677b18d5dd3800410/3x.webp');
-                        // // https://cdn.7tv.app/emote/60e8677677b18d5dd3800410/2x.webp
-                        // // https://cdn.7tv.app/emote/60e8677677b18d5dd3800410/1x.webp
-                        '3': 'https://cdn.7tv.app/emote/61d0e186ce8bd4a59cb895af/3x.webp',
-                        '2': 'https://cdn.7tv.app/emote/61d0e186ce8bd4a59cb895af/2x.webp',
-                        '1': 'https://cdn.7tv.app/emote/61d0e186ce8bd4a59cb895af/1x.webp',
-                    },
-                    'itsbandorax': {
-                        '3': 'https://cdn.7tv.app/emote/62b069136f979a87147499f9/3x.webp',
-                        '2': 'https://cdn.7tv.app/emote/62b069136f979a87147499f9/2x.webp',
-                        '1': 'https://cdn.7tv.app/emote/62b069136f979a87147499f9/1x.webp',
-                    },
-                    'styles': {
-                        '3': 'https://cdn.7tv.app/emote/62893283ed0a40a5ec5f00d9/3x.webp',
-                        '2': 'https://cdn.7tv.app/emote/62893283ed0a40a5ec5f00d9/2x.webp',
-                        '1': 'https://cdn.7tv.app/emote/62893283ed0a40a5ec5f00d9/1x.webp',
-                    },
-                    'truer': {
-                        '3': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4c39207000564711868f3196cc0a8748/default/dark/3.0',
-                        '2': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4c39207000564711868f3196cc0a8748/default/dark/2.0',
-                        '1': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4c39207000564711868f3196cc0a8748/default/dark/1.0',
-                    },
-                    'platonicthough': {
-                        '3': 'https://cdn.discordapp.com/attachments/1137946614116388874/1137947897925742592/SMIlima.png',
-                        // '2': '',
-                        // '1': '',
-                    },
-                };
-                // eslint-disable-next-line no-prototype-builtins
-                if (Chat.cache.globalMods.includes(nick.toLowerCase()) || customBadges.hasOwnProperty(nick.toLowerCase())) {
-                    let $badge = $('<img/>');
-                    $badge.addClass('badge');
-                    // if (badge.color) $badge.css('background-color', badge.color);
-                    $badge.attr('src', defaultModBadge['3']);
-                    // eslint-disable-next-line no-prototype-builtins
-                    if (customBadges.hasOwnProperty(nick.toLowerCase())) {
-                        $badge.attr('src', customBadges[nick.toLowerCase()]['3']);
-                    }
-                    $userInfo.append($badge);
-                }
                 // Adding :tf: badge
                 if (nick.toLowerCase() === 'is2511') {
                     let $badge = $('<img/>');
                     $badge.addClass('badge');
                     // if (badge.color) $badge.css('background-color', badge.color);
-                    $badge.attr('src', 'https://cdn.betterttv.net/emote/54fa8f1401e468494b85b537/3x');
+                    $badge.attr('src', Chat.info.chatisBadges.userBadges.get('is2511').get('3'));
+                    $userInfo.append($badge);
+                }
+
+                // eslint-disable-next-line no-prototype-builtins
+                if (Chat.cache.globalMods.includes(nick.toLowerCase()) || Chat.info.chatisBadges.userBadges.has(nick.toLowerCase())) {
+                    let $badge = $('<img/>');
+                    $badge.addClass('badge');
+                    // if (badge.color) $badge.css('background-color', badge.color);
+                    $badge.attr('src', Chat.info.chatisBadges.modBadge.get('3'));
+                    // eslint-disable-next-line no-prototype-builtins
+                    if (Chat.info.chatisBadges.userBadges.has(nick.toLowerCase()) && nick.toLowerCase() !== 'is2511') {
+                        $badge.attr('src', Chat.info.chatisBadges.userBadges.get(nick.toLowerCase()).get('3'));
+                    }
                     $userInfo.append($badge);
                 }
 
