@@ -1,4 +1,4 @@
-const version = '2.33.3+504';
+const version = '2.33.4+506';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -234,6 +234,7 @@ var Chat = {
             ws: null,
             sessionId: null,
             ackCount: 0,
+            resumeAck: false,
 
             wsCloseCodes: {
                 OK: 1000,
@@ -365,6 +366,7 @@ var Chat = {
                 }
                 
                 Chat.stv.eventApi.ackCount = 0;
+                Chat.stv.eventApi.resumeAck = false;
             },
             
             connectWs: (resume) => {
@@ -408,9 +410,10 @@ var Chat = {
                                 Chat.stv.eventApi.sendMsg(ops.RESUME, {
                                     session_id: Chat.stv.eventApi.sessionId,
                                 });
-                                Chat.stv.eventApi.ackOrTimeout(() => {
-                                    // Try from scratch
-                                    Chat.stv.eventApi.reconnect.now(false, "failed to resume");
+                                setTimeout(() => {
+                                    if (!Chat.stv.eventApi.resumeAck) {
+                                        Chat.stv.eventApi.reconnect.now(false, "failed to resume");
+                                    }
                                 }, 5 * 1000);
                             } else {
                                 Chat.stv.eventApi.sessionId = data.d.session_id;
@@ -429,6 +432,10 @@ var Chat = {
                         } break;
                         case ops.ACK: {
                             Chat.stv.eventApi.ackCount = Chat.stv.eventApi.ackCount + 1;
+                            if (data.d.command === "RESUME") {
+                                Chat.stv.eventApi.resumeAck = true;
+                                console.log("ChatIS: [7tv] EventAPI, successfully RESUMEd with sessionId:", Chat.stv.eventApi.sessionId);
+                            }
                         } break;
                         case ops.ERROR: {
                             Chat.stv.eventApi.reconnect.now(false, "got ERROR");
