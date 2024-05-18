@@ -1,4 +1,4 @@
-const version = '2.33.1+502';
+const version = '2.33.2+503';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -261,15 +261,15 @@ var Chat = {
             reconnect: {
                 timeoutId: null,
 
-                now: (resume) => {
-                    console.log("ChatIS: [7tv] EventAPI, reconnecting...");
+                now: (resume, reason) => {
+                    console.log("ChatIS: [7tv] EventAPI, reconnecting... (Reason:", reason, ")");
                     if (Chat.stv.eventApi.reconnect.timeoutId)
                         clearTimeout(Chat.stv.eventApi.reconnect.timeoutId);
                     Chat.stv.eventApi.connectWs(resume);
                 },
-                after: (resume, timeoutMs, jitterMs) => {
+                after: (resume, timeoutMs, jitterMs, reason) => {
                     const realTimeoutMs = timeoutMs + jitterMs * (1 - 2 * Math.random());
-                    console.log("ChatIS: [7tv] EventAPI, reconnecting in about", Math.round(realTimeoutMs/1000), "seconds...");
+                    console.log("ChatIS: [7tv] EventAPI, reconnecting in about", Math.round(realTimeoutMs/1000), "seconds... (Reason:", reason, ")");
                     if (Chat.stv.eventApi.reconnect.timeoutId)
                         clearTimeout(Chat.stv.eventApi.reconnect.timeoutId);
                     Chat.stv.eventApi.reconnect.timeoutId = setTimeout(() => {
@@ -385,7 +385,7 @@ var Chat = {
                                 });
                                 Chat.stv.eventApi.ackOrTimeout(() => {
                                     // Try from scratch
-                                    Chat.stv.eventApi.reconnect.now(false);
+                                    Chat.stv.eventApi.reconnect.now(false, "failed to resume");
                                 }, 5 * 1000);
                             } else {
                                 Chat.stv.eventApi.sessionId = data.d.session_id;
@@ -400,16 +400,16 @@ var Chat = {
                             Chat.stv.eventApi.heartbeat.gotHeartbeat();
                         } break;
                         case ops.RECONNECT: {
-                            Chat.stv.eventApi.reconnect.now(true);
+                            Chat.stv.eventApi.reconnect.now(true, "got RECONNECT");
                         } break;
                         case ops.ACK: {
                             Chat.stv.eventApi.ackCount = Chat.stv.eventApi.ackCount + 1;
                         } break;
                         case ops.ERROR: {
-                            Chat.stv.eventApi.reconnect.now(false);
+                            Chat.stv.eventApi.reconnect.now(false, "got ERROR");
                         } break;
                         case ops.END_OF_STREAM: {
-                            Chat.stv.eventApi.reconnect.now(false);
+                            Chat.stv.eventApi.reconnect.now(false, "got END_OF_STREAM");
                         } break;
                     }
                 });
@@ -435,21 +435,39 @@ var Chat = {
                         // ² reconnect with significantly greater delay, i.e at least 5 minutes, including jitter
                         // ³ only reconnect if this was initiated by action of the end-user
                     };
+
+                    const codeToStr = (code) => {
+                        switch (code) {
+                            case codes.SERVER_ERROR: return "SERVER_ERROR";
+                            case codes.UNKNOWN_OPERATION: return "UNKNOWN_OPERATION";
+                            case codes.INVALID_PAYLOAD: return "INVALID_PAYLOAD";
+                            case codes.AUTH_FAILURE: return "AUTH_FAILURE";
+                            case codes.ALREADY_IDENTIFIED: return "ALREADY_IDENTIFIED";
+                            case codes.RATE_LIMITED: return "RATE_LIMITED";
+                            case codes.RESTART: return "RESTART";
+                            case codes.MAINTENANCE: return "MAINTENANCE";
+                            case codes.TIMEOUT: return "TIMEOUT";
+                            case codes.ALREADY_SUBSCRIBED: return "ALREADY_SUBSCRIBED";
+                            case codes.NOT_SUBSCRIBED: return "NOT_SUBSCRIBED";
+                            case codes.INSUFFICIENT_PRIVILEGE: return "INSUFFICIENT_PRIVILEGE";
+                            default: return "?";
+                        }
+                    }
                     
                     switch (event.code) {
                         case codes.SERVER_ERROR:
                         case codes.RESTART: {
-                            Chat.stv.eventApi.reconnect.now(true);
+                            Chat.stv.eventApi.reconnect.now(true, `closed with ${codeToStr(event.code)}`);
                         } break;
                         case codes.RATE_LIMITED:
                         case codes.MAINTENANCE: {
-                            Chat.stv.eventApi.reconnect.after(false, 70 * 1000, 10 * 1000);
+                            Chat.stv.eventApi.reconnect.after(false, 70 * 1000, 10 * 1000, `closed with ${codeToStr(event.code)}`);
                         } break;
                         default: {
                             if (event.code >= 4000) {
-                                Chat.stv.eventApi.reconnect.now(false);
+                                Chat.stv.eventApi.reconnect.now(false, `closed with 4XXX (${codeToStr(event.code)})`);
                             } else {
-                                Chat.stv.eventApi.reconnect.after(false, 20 * 1000, 10 * 1000);
+                                Chat.stv.eventApi.reconnect.after(false, 20 * 1000, 10 * 1000, `closed with other (${event.code})`);
                             }
                         } break;
                     }
@@ -458,7 +476,7 @@ var Chat = {
                 Chat.stv.eventApi.ws.addEventListener("error", (event) => {
                     console.log("ChatIS: [7tv] EventAPI WS error:", event);
 
-                    Chat.stv.eventApi.reconnect.after(false, 20 * 1000, 10 * 1000);
+                    Chat.stv.eventApi.reconnect.after(false, 20 * 1000, 10 * 1000, "WebSocket error");
                 });
                 
             }
