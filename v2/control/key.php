@@ -1,2 +1,0 @@
-<?php
-$globalApiKey = 'fuckedUpLastKeyWhoopsNewOneIGuess';
