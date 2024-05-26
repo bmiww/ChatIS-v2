@@ -1,4 +1,4 @@
-const version = '2.33.4+506';
+const version = '2.33.5+507';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -85,6 +85,32 @@ function removeFloat(id) {
 function makeFunction(code) {
     return new Function('"use strict"; ' + code);
 }
+
+const wsCloseCodesPrecursor = [
+    [1000, 'OK'],
+    [1005, 'NO_CODE_PROVIDED'],
+
+    // ChatIS
+    [4101, 'CHATIS_RECONNECTING'],
+
+    // 7tv EventAPI
+    [4000, 'SERVER_ERROR'], // an error occured on the server's end 	Yes
+    [4001, 'UNKNOWN_OPERATION'], // the client sent an unexpected opcode 	No¹
+    [4002, 'INVALID_PAYLOAD'], // the client sent a payload that couldn't be decoded 	No¹
+    [4003, 'AUTH_FAILURE'], // the client unsucessfully tried to identify 	No¹
+    [4004, 'ALREADY_IDENTIFIED'], // the client wanted to identify again 	No¹
+    [4005, 'RATE_LIMITED'], // the client is being rate-limited 	Maybe³
+    [4006, 'RESTART'], // the server is restarting and the client should reconnect 	Yes
+    [4007, 'MAINTENANCE'], // the server is in maintenance mode and not accepting connections 	Yes²
+    [4008, 'TIMEOUT'], // the client was idle for too long 	Yes
+    [4009, 'ALREADY_SUBSCRIBED'], // the client tried to subscribe to an event twice 	No¹
+    [4010, 'NOT_SUBSCRIBED'], // the client tried to unsubscribe from an event they weren't subscribing to 	No¹
+    [4011, 'INSUFFICIENT_PRIVILEGE'], // the client did something that they did not have permission for 	Maybe³
+    // ¹ this code indicate a bad client implementation. you must log such error and fix the issue before reconnecting
+    // ² reconnect with significantly greater delay, i.e at least 5 minutes, including jitter
+    // ³ only reconnect if this was initiated by action of the end-user
+];
+
 
 var Chat = {
     info: {
@@ -236,31 +262,9 @@ var Chat = {
             ackCount: 0,
             resumeAck: false,
 
-            wsCloseCodes: {
-                OK: 1000,
-                NO_CODE_PROVIDED: 1005,
+            wsCloseCodes: Object.fromEntries(wsCloseCodesPrecursor.map((pair) => [pair[1], pair[0]])),
+            wsCloseCodeNames: new Map(wsCloseCodesPrecursor),
 
-                // ChatIS
-                CHATIS_RECONNECTING: 4101,
-
-                // 7tv EventAPI
-                SERVER_ERROR: 4000, // an error occured on the server's end 	Yes
-                UNKNOWN_OPERATION: 4001, // the client sent an unexpected opcode 	No¹
-                INVALID_PAYLOAD: 4002, // the client sent a payload that couldn't be decoded 	No¹
-                AUTH_FAILURE: 4003, // the client unsucessfully tried to identify 	No¹
-                ALREADY_IDENTIFIED: 4004, // the client wanted to identify again 	No¹
-                RATE_LIMITED: 4005, // the client is being rate-limited 	Maybe³
-                RESTART: 4006, // the server is restarting and the client should reconnect 	Yes
-                MAINTENANCE: 4007, // the server is in maintenance mode and not accepting connections 	Yes²
-                TIMEOUT: 4008, // the client was idle for too long 	Yes
-                ALREADY_SUBSCRIBED: 4009, // the client tried to subscribe to an event twice 	No¹
-                NOT_SUBSCRIBED: 4010, // the client tried to unsubscribe from an event they weren't subscribing to 	No¹
-                INSUFFICIENT_PRIVILEGE: 4011, // the client did something that they did not have permission for 	Maybe³
-                // ¹ this code indicate a bad client implementation. you must log such error and fix the issue before reconnecting
-                // ² reconnect with significantly greater delay, i.e at least 5 minutes, including jitter
-                // ³ only reconnect if this was initiated by action of the end-user
-            },
-            
             heartbeat: {
                 timeoutId: null,
                 intervalMs: null,
@@ -452,25 +456,8 @@ var Chat = {
                     const codes = Chat.stv.eventApi.wsCloseCodes;
 
                     const codeToStr = (code) => {
-                        switch (code) {
-                            case codes.OK: return "OK";
-                            case codes.NO_CODE_PROVIDED: return "NO_CODE_PROVIDED";
-                            case codes.CHATIS_RECONNECTING: return "CHATIS_RECONNECTING";
-                            case codes.SERVER_ERROR: return "SERVER_ERROR";
-                            case codes.UNKNOWN_OPERATION: return "UNKNOWN_OPERATION";
-                            case codes.INVALID_PAYLOAD: return "INVALID_PAYLOAD";
-                            case codes.AUTH_FAILURE: return "AUTH_FAILURE";
-                            case codes.ALREADY_IDENTIFIED: return "ALREADY_IDENTIFIED";
-                            case codes.RATE_LIMITED: return "RATE_LIMITED";
-                            case codes.RESTART: return "RESTART";
-                            case codes.MAINTENANCE: return "MAINTENANCE";
-                            case codes.TIMEOUT: return "TIMEOUT";
-                            case codes.ALREADY_SUBSCRIBED: return "ALREADY_SUBSCRIBED";
-                            case codes.NOT_SUBSCRIBED: return "NOT_SUBSCRIBED";
-                            case codes.INSUFFICIENT_PRIVILEGE: return "INSUFFICIENT_PRIVILEGE";
-                            default: return "?";
-                        }
-                    }
+                        return Chat.stv.eventApi.wsCloseCodeNames.get(code) || `${code}`;
+                    };
                     
                     switch (event.code) {
                         case codes.CHATIS_RECONNECTING: {
