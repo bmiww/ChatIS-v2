@@ -1945,7 +1945,7 @@ var Chat = {
                     case 'HORSING': {
                         if (accessLevel < 500) return;
                         // console.log(nick, message);
-                        let link = 'https://cdn.7tv.app/emote/61241367ca26708cad4a1ea6/4x'; // HORSING
+                        let link = 'https://cdn.7tv.app/emote/61241367ca26708cad4a1ea6/4x.webp'; // HORSING
                         let pAR = (text.match(/ -(x)/) || [])[1] || false; // Preserve Aspect Ratio
                         // pAR = !pAR; // true by default
                         let fg = (text.match(/ -(f)/) || [])[1] || false; // Make the image foreground (bg by default)
