@@ -1,4 +1,4 @@
-const version = '2.33.7+509';
+const version = '2.33.8+510';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1515,6 +1515,7 @@ var Chat = {
                 'mmattbtw': '#FAD9FF',
                 'notwolfgod': '#90A9A4',
                 'retrorelaxo': '#FFFDD9', // Traded for CSGO skins on Steam lol
+                'neomothdev': '#CBA4FC', // sat 35 becuase begged on their knees (very real)
             }
             for (const usr in chatColors) {
                 if (nick.toLowerCase() === usr) $message.css('color', chatColors[usr]);
