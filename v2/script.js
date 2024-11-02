@@ -1,4 +1,4 @@
-const version = '2.33.8+510';
+const version = '2.33.9+512';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -45,11 +45,9 @@ function escapeHtml(message) {
 }
 
 function twitchAPIproxy(path, params) {
-    return $.ajax({
-        dataType: "json",
-        url: "https://chatis.is2511.com/v2/twitch-api/?path=" + encodeURIComponent(path)
-            + (params ? '&params=' + encodeURIComponent(params) : '')
-    });
+    let pathEncoded = encodeURIComponent(path);
+    let paramsEncoded = params ? '&params=' + encodeURIComponent(params) : '';
+    return fetch(`https://chatis.is2511.com/v2/twitch-api/?path=${pathEncoded}${paramsEncoded}`);
 }
 
 let ttsStorage = [];
@@ -853,7 +851,10 @@ var Chat = {
             });
         });
 
-        twitchAPIproxy("/helix/users", "login=" + Chat.info.channel).done(function(res) {
+        twitchAPIproxy("/helix/users", "login=" + Chat.info.channel).then(async function(r) {
+            // TODO: Handle JSON fail, for now throwing seems fine
+            let res = await r.json();
+
             if (!res.data[0]) {
                 Chat.info.channelID = 0;
                 console.log("ChatIS: This twitch channel does not exist!");
@@ -982,7 +983,9 @@ var Chat = {
             }
 
             // Load badges
-            twitchAPIproxy('/helix/chat/badges/global').done(function(global) {
+            twitchAPIproxy('/helix/chat/badges/global').then(async function(r) {
+                let global = await r.json();
+
                 if (!Array.isArray(global.data))
                     return;
                 for (const badgeSet of global.data) {
@@ -998,7 +1001,9 @@ var Chat = {
                 //         Chat.info.badges[badge[0] + ':' + v[0]] = v[1].image_url_4x;
                 //     });
                 // });
-                twitchAPIproxy('/helix/chat/badges', 'broadcaster_id=' + encodeURIComponent(Chat.info.channelID)).done(function(channel) {
+                twitchAPIproxy('/helix/chat/badges', 'broadcaster_id=' + encodeURIComponent(Chat.info.channelID)).then(async function(r) {
+                    let channel = await r.json();
+
                     if (!Array.isArray(channel.data))
                         return;
                     for (const badgeSet of channel.data) {
@@ -1080,7 +1085,9 @@ var Chat = {
             }
 
             // Load cheers images
-            twitchAPIproxy("/helix/bits/cheermotes", "broadcaster_id=" + Chat.info.channelID).done(function(res) {
+            twitchAPIproxy("/helix/bits/cheermotes", "broadcaster_id=" + Chat.info.channelID).then(async function(r) {
+                let res = await r.json();
+
                 res.data.forEach(action => {
                     Chat.info.cheers[action.prefix] = {}
                     action.tiers.forEach(tier => {
