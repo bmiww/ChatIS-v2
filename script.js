@@ -9,17 +9,6 @@ const FuckingSettings = {
     shadows: ['small', 'medium', 'large'],
 };
 
-// Load version info
-$.getJSON('version.json', (version) => {
-    version = version.version;
-    $('.versionContainer').text(version);
-
-    $.get('CHANGELOG.md', function(changelog) {
-        changelog = DOMPurify.sanitize(changelog);
-        // $('#changelog').html(marked(changelog)); // TODO
-    }, 'text');
-})
-
 function fadeOption(event) {
     if ($fade_bool.is(':checked')) {
         $fade.removeClass('hidden');
