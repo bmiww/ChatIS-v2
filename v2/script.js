@@ -1,4 +1,4 @@
-const version = '2.33.9+512';
+const version = '2.33.10+513';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -308,38 +308,44 @@ var Chat = {
             },
             
             genSubs: (twitchId, channelEmoteSetId) => {
-                return [
-                    {
-                        type: "entitlement.*",
-                        condition: {
-                            platform: "TWITCH",
-                            ctx: "channel",
-                            id: twitchId,
+                let subs = [];
+                if (twitchId) {
+                    subs = subs.concat([
+                        {
+                            type: "entitlement.*",
+                            condition: {
+                                platform: "TWITCH",
+                                ctx: "channel",
+                                id: twitchId,
+                            },
                         },
-                    },
-                    {
-                        type: "cosmetic.*",
-                        condition: {
-                            platform: "TWITCH",
-                            ctx: "channel",
-                            id: twitchId,
+                        {
+                            type: "cosmetic.*",
+                            condition: {
+                                platform: "TWITCH",
+                                ctx: "channel",
+                                id: twitchId,
+                            },
                         },
-                    },
-                    {
-                        type: "emote_set.*",
-                        condition: {
-                            platform: "TWITCH",
-                            ctx: "channel",
-                            id: twitchId,
+                        {
+                            type: "emote_set.*",
+                            condition: {
+                                platform: "TWITCH",
+                                ctx: "channel",
+                                id: twitchId,
+                            },
                         },
-                    },
-                    {
+                    ]);
+                }
+                if (channelEmoteSetId) {
+                    subs.push({
                         type: "emote_set.update",
                         condition: {
                             object_id: channelEmoteSetId,
                         },
-                    },
-                ];
+                    });
+                }
+                return subs;
             },
             
             sendMsg: (op, d) => {
