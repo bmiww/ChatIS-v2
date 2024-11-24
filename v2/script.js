@@ -1,4 +1,4 @@
-const version = '2.33.10+513';
+const version = '2.33.11+514';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1622,23 +1622,23 @@ var Chat = {
             Chat.cache.lastEmoteInMessageLink = ((replacements[Chat.cache.lastEmoteInMessage] || '').match(/ src="([^"]+)"/) || [])[1];
             // console.log(Chat.cache.lastEmoteInMessage, Chat.cache.lastEmoteInMessageLink);
 
-            let now = new Date();
+            // let now = new Date();
             // April 1st
-            const bgImage = $('#bg-image');
-            if (Chat.info.lastEmoteBackground) {
-                bgImage.css('opacity', '');
-            } else {
-                bgImage.css('opacity', '0.5');
-            }
-            if ((now.getDate() === 1 && now.getMonth() === 3) || Chat.info.lastEmoteBackground) {
-                if (Chat.info.channel.toLowerCase() !== 'weest') {
-                    bgImage.attr('src', Chat.cache.lastEmoteInMessageLink);
-                    // console.log('April fools! :)');
-                }
-            } else {
-                if (bgImage.attr('src') !== '')
-                    bgImage.attr('src', '');
-            }
+            // const bgImage = $('#bg-image');
+            // if (Chat.info.lastEmoteBackground) {
+            //     bgImage.css('opacity', '');
+            // } else {
+            //     bgImage.css('opacity', '0.5');
+            // }
+            // if ((now.getDate() === 1 && now.getMonth() === 3) || Chat.info.lastEmoteBackground) {
+            //     if (Chat.info.channel.toLowerCase() !== 'weest') {
+            //         bgImage.attr('src', Chat.cache.lastEmoteInMessageLink);
+            //         // console.log('April fools! :)');
+            //     }
+            // } else {
+            //     if (bgImage.attr('src') !== '')
+            //         bgImage.attr('src', '');
+            // }
 
             message = twemoji.parse(message);
             $message.html(message);
