@@ -1,4 +1,4 @@
-const version = '2.33.11+514';
+const version = '2.33.12+515';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -1624,13 +1624,13 @@ var Chat = {
 
             // let now = new Date();
             // April 1st
-            // const bgImage = $('#bg-image');
+            const bgImage = $('#bg-image');
             // if (Chat.info.lastEmoteBackground) {
             //     bgImage.css('opacity', '');
             // } else {
             //     bgImage.css('opacity', '0.5');
             // }
-            // if ((now.getDate() === 1 && now.getMonth() === 3) || Chat.info.lastEmoteBackground) {
+            // if ((now.getDate() === 1 && now.getMonth() === 3)) {
             //     if (Chat.info.channel.toLowerCase() !== 'weest') {
             //         bgImage.attr('src', Chat.cache.lastEmoteInMessageLink);
             //         // console.log('April fools! :)');
@@ -1639,6 +1639,10 @@ var Chat = {
             //     if (bgImage.attr('src') !== '')
             //         bgImage.attr('src', '');
             // }
+
+            if (Chat.info.lastEmoteBackground) {
+                bgImage.attr('src', Chat.cache.lastEmoteInMessageLink);
+            }
 
             message = twemoji.parse(message);
             $message.html(message);
