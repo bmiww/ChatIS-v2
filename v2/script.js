@@ -1,4 +1,4 @@
-const version = '2.33.12+515';
+const version = '2.33.13+516';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -198,6 +198,7 @@ var Chat = {
                 'jynxzi',
                 'thesketchreal',
                 'feelssunnyman',
+                'insomniatricz',
             ])
         },
         cheers: {},
@@ -1837,6 +1838,7 @@ var Chat = {
                         // let href = window.location.href.replace(/&random=[0-9]*/g, "")
                         // href += '&random=' + Math.floor(Math.random()*1e8);
                         // window.location = href;
+                        // TODO: Add option to force cache drop for all resources
                         window.location.reload(true);
                     }
                         break;
