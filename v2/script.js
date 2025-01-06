@@ -1,4 +1,4 @@
-const version = '2.33.13+516';
+const version = '2.33.14+517';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -199,6 +199,7 @@ var Chat = {
                 'thesketchreal',
                 'feelssunnyman',
                 'insomniatricz',
+                'mooda',
             ])
         },
         cheers: {},
