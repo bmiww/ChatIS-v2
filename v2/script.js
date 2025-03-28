@@ -2437,9 +2437,11 @@ var Chat = {
                                 bots.push('titlechange_bot', 'supibot', 'pajbot', 'huwobot',
                                     'thepositivebot', 'kunszgbot', 'vjbotardo', 'feelsokaybot',
                                     'fossabot', 'scriptorex');
+                                // Submitted by Linar (@linaryx@twitch.tv)
+                                bots.push('oshbt', 'spanixbot', 'potatbotat', 'streamqbot', 'twirapp');
                                 // Some channel bots
                                 bots.push(
-                                    // Owner: Weest (@weest@twitch.tv), channel bot
+                                    // Owner: Weest (@weest@twitch.tv)
                                     'roboweest',
                                     // Owner: relaxo (@retrorelaxo@twitch.tv)
                                     'cvk3'
