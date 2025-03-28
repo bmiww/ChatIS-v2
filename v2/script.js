@@ -1435,7 +1435,7 @@ var Chat = {
                 }
 
                 // eslint-disable-next-line no-prototype-builtins
-                if (Chat.cache.globalMods.includes(nick.toLowerCase()) || Chat.info.chatisBadges.userBadges.has(nick.toLowerCase())) {
+                if ((Chat.cache.globalMods.includes(nick.toLowerCase()) || Chat.info.chatisBadges.userBadges.has(nick.toLowerCase())) && nick.toLowerCase() !== 'is2511') {
                     let $badge = $('<img/>');
                     $badge.addClass('badge');
                     // if (badge.color) $badge.css('background-color', badge.color);
