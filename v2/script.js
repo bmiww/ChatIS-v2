@@ -109,6 +109,17 @@ const wsCloseCodesPrecursor = [
     // ³ only reconnect if this was initiated by action of the end-user
 ];
 
+const styleSettingsMap = {
+    size: ['small', 'medium', 'large'],
+    font: [
+        'BalooTammudu', 'SegoeUI', 'Roboto', 'Lato',
+        'NotoSans', 'SourceCodePro', 'Impact', 'Comfortaa',
+        'DancingScript', 'IndieFlower', 'OpenSans', 'AlsinaUltrajada'
+    ],
+    stroke: ['thin', 'medium', 'thick', 'thicker'],
+    shadow: ['small', 'medium', 'large'],
+};
+
 
 var Chat = {
     info: {
@@ -882,24 +893,12 @@ var Chat = {
             Chat.loadCosmetics(Chat.info.channelID);
             Chat.stv.subscribeToEventApi();
 
-            // Load CSS
-            let style = {
-                size: ['small', 'medium', 'large'],
-                font: [
-                    'BalooTammudu', 'SegoeUI', 'Roboto', 'Lato',
-                    'NotoSans', 'SourceCodePro', 'Impact', 'Comfortaa',
-                    'DancingScript', 'IndieFlower', 'OpenSans', 'AlsinaUltrajada'
-                ],
-                stroke: ['thin', 'medium', 'thick', 'thicker'],
-                shadow: ['small', 'medium', 'large'],
-            };
-
             // size
             if ((Chat.info.size >= 1) && (Chat.info.size <= 3))
                 $("<link/>", {
                     rel: "stylesheet",
                     type: "text/css",
-                    href: `styles/size_${style.size[Chat.info.size - 1]}.css`
+                    href: `styles/size_${styleSettingsMap.size[Chat.info.size - 1]}.css`
                 }).appendTo("head");
 
             // font
@@ -907,7 +906,7 @@ var Chat = {
                 $("<link/>", {
                     rel: "stylesheet",
                     type: "text/css",
-                    href: `styles/font_${style.font[Chat.info.font - 1]}.css`
+                    href: `styles/font_${styleSettingsMap.font[Chat.info.font - 1]}.css`
                 }).appendTo("head");
             else
                 if (Chat.info.fontCustom !== "")
@@ -916,7 +915,7 @@ var Chat = {
                     $("<link/>", {
                         rel: "stylesheet",
                         type: "text/css",
-                        href: `styles/font_${style.font[11]}.css`
+                        href: `styles/font_${styleSettingsMap.font[11]}.css`
                     }).appendTo("head");
 
             // stroke
@@ -934,7 +933,7 @@ var Chat = {
                     $("<link/>", {
                         rel: "stylesheet",
                         type: "text/css",
-                        href: `styles/shadow_${style.shadow[Chat.info.shadow - 1]}.css`
+                        href: `styles/shadow_${styleSettingsMap.shadow[Chat.info.shadow - 1]}.css`
                     }).appendTo("head");
 
             // emoteScale
