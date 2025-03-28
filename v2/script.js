@@ -1,4 +1,4 @@
-const version = '2.33.15+518';
+const version = '2.33.15+519';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -296,22 +296,26 @@ var Chat = {
 
                 now: (resume, reason) => {
                     console.log("ChatIS: [7tv] EventAPI, reconnecting... (Reason:", reason, ")");
-                    if (Chat.stv.eventApi.reconnect.timeoutId)
-                        clearTimeout(Chat.stv.eventApi.reconnect.timeoutId);
+                    Chat.stv.eventApi.reconnect.cancel();
                     Chat.stv.eventApi.connectWs(resume);
                 },
                 after: (resume, timeoutMs, jitterMs, reason) => {
                     const realTimeoutMs = timeoutMs + jitterMs * (1 - 2 * Math.random());
                     console.log("ChatIS: [7tv] EventAPI, reconnecting in about", Math.round(realTimeoutMs/1000), "seconds... (Reason:", reason, ")");
-                    if (Chat.stv.eventApi.reconnect.timeoutId)
-                        clearTimeout(Chat.stv.eventApi.reconnect.timeoutId);
+                    Chat.stv.eventApi.reconnect.cancel();
                     Chat.stv.eventApi.reconnect.timeoutId = setTimeout(() => {
                         console.log("ChatIS: [7tv] EventAPI, reconnecting as scheduled...");
                         Chat.stv.eventApi.connectWs(resume);
                     }, realTimeoutMs);
+                },
+                cancel: () => {
+                    if (Chat.stv.eventApi.reconnect.timeoutId) {
+                        clearTimeout(Chat.stv.eventApi.reconnect.timeoutId);
+                        Chat.stv.eventApi.reconnect.timeoutId = null;
+                    }
                 }
             },
-            
+
             genSubs: (twitchId, channelEmoteSetId) => {
                 let subs = [];
                 if (twitchId) {
