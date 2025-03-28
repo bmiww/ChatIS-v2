@@ -1,4 +1,4 @@
-const version = '2.33.15+519';
+const version = '2.34.3+521';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -14,6 +14,8 @@ function strmax(str, length) {
 
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+const obsVersionStr = (navigator.userAgent.match(/OBS\/([^\s]+)/) || [])[1];
+const obsVersion = obsVersionStr ? parseSemver(obsVersionStr) : null;
 
 (function($) { // Thanks to BrunoLM (https://stackoverflow.com/a/3855394)
     $.QueryString = (function(paramsArray) {
@@ -53,18 +55,25 @@ function twitchAPIproxy(path, params) {
 let ttsStorage = [];
 let floatStorage = {};
 function showFloat(id, msg, millis = 5*1000, alpha = 0.3, zIndex = 0) {
-    if (floatStorage[id]) removeFloat(id);
+    if (floatStorage[id])
+        removeFloat(id);
     const chatFontSize = window.getComputedStyle(document.getElementById("chat_container")).fontSize;
-    let $float = $('<pre data-id="' + id + '" style="' +
-        'position: fixed; left: 50%; bottom: 1%; max-width: 99%;' +
-        'white-space: pre-wrap; margin: 0; padding: 2px;' +
-        'background: rgba(0,0,0,' + alpha + ');' +
-        'color: #fff;' +
-        'font-weight: 800;' +
-        'font-size: ' + chatFontSize + ';' +
-        'z-index: ' + zIndex + ';' +
-        'transform: translate(-50%, 0);">' +
-        msg + '</pre>');
+    const style = `
+        position: fixed;
+        left: 50%;
+        bottom: 1%;
+        max-width: 99%;
+        white-space: pre-wrap;
+        margin: 0;
+        padding: 2px;
+        background: rgba(0,0,0,${alpha});
+        color: #fff;
+        font-weight: 800;
+        font-size: ${chatFontSize};
+        z-index: ${zIndex};
+        transform: translate(-50%, 0);
+    `.replace(/\s+/g, ' ').trim();
+    let $float = $(`<pre data-id="${id}" style="${style}">${msg}</pre>`);
     $('body').append($float);
     floatStorage[id] = $float;
     setTimeout(() => {
@@ -119,6 +128,49 @@ const styleSettingsMap = {
     stroke: ['thin', 'medium', 'thick', 'thicker'],
     shadow: ['small', 'medium', 'large'],
 };
+
+function parseSemver(version) {
+    // Based on https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+    const semverRegex = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+    
+    let matches = version.match(semverRegex);
+    return {
+        major: parseInt(matches[1]),
+        minor: parseInt(matches[2]),
+        patch: parseInt(matches[3]),
+        preRelease: matches[4],
+        build: matches[5]
+    }
+}
+
+// Thanks to https://github.com/owumaro/text-stroke-generator/
+function textStrokeViaShadow(thickness, color = 'black') {
+    let shadowLayer = function (x, y, color, precision = 5) {
+        x = parseFloat(x.toFixed(precision));
+        y = parseFloat(y.toFixed(precision));
+        return `${x}px ${y}px ${color}`;
+    }
+
+    let textShadow = 'text-shadow: ';
+    for (let angle = 0; angle < 2 * Math.PI; angle += 1/thickness) {
+        if (angle !== 0)
+            textShadow += ', ';
+        textShadow += shadowLayer(Math.cos(angle) * thickness, Math.sin(angle) * thickness, color);
+    }
+    textShadow += ';';
+
+    return textShadow;
+}
+
+// See https://github.com/IS2511/ChatIS/issues/16#issuecomment-2745986759
+function applyTextStroke($elem, thickness, color = 'black') {
+    if (obsVersion && obsVersion.major >= 31) {
+        $elem.css('paint-order', 'stroke fill');
+        $elem.css('-webkit-text-stroke', thickness + 'px ' + color);
+    } else {
+        $elem.css('text-shadow', textStrokeViaShadow(thickness, color));
+    }
+}
 
 
 var Chat = {
@@ -226,6 +278,9 @@ var Chat = {
         lastEmoteInMessage: null,
         lastEmoteInMessageLink: null,
         perms: {},
+    },
+    flags: {
+        usingHackyStrokeViaShadow: false,
     },
 
     // Called by img elements with the zerowidth class
@@ -707,6 +762,14 @@ var Chat = {
 
 
 
+    initFlags: function () {
+        // See https://github.com/IS2511/ChatIS/issues/16#issuecomment-2745986759
+        Chat.flags.usingHackyStrokeViaShadow = true;
+        if ((obsVersion && obsVersion.major >= 31)) {
+            Chat.flags.usingHackyStrokeViaShadow = false;
+        }
+    },
+
     reportLoading: function () {
         Chat.info.reportLoadingTrackers = {
             mainChat: new Promise(function (resolve, reject) {
@@ -870,6 +933,8 @@ var Chat = {
 
     load: function(callback) {
 
+        Chat.initFlags();
+
         fetch('https://chatis.is2511.com/v2/control/mods/mod-list.json').then(function (r) {
             r.json().then(function (data) {
                 if (data instanceof Array)
@@ -920,12 +985,30 @@ var Chat = {
 
             // stroke
             if (Chat.info.stroke)
-                if ((Chat.info.stroke >= 1) && (Chat.info.stroke <= 4))
-                    $("<link/>", {
-                        rel: "stylesheet",
-                        type: "text/css",
-                        href: `styles/stroke_${style.stroke[Chat.info.stroke - 1]}.css`
-                    }).appendTo("head");
+                if ((Chat.info.stroke >= 1) && (Chat.info.stroke <= 4)) {
+                    let thickness = 1;
+                    switch (styleSettingsMap.stroke[Chat.info.stroke - 1]) {
+                        case 'thin': {
+                            thickness = 1;
+                        } break;
+                        case 'medium': {
+                            thickness = 2;
+                        } break;
+                        case 'thick': {
+                            thickness = 3;
+                        } break;
+                        case 'thicker': {
+                            thickness = 4;
+                        } break;
+                    }
+
+                    let style = `paint-order: stroke fill; -webkit-text-stroke: ${thickness}px black;`;
+                    if (Chat.flags.usingHackyStrokeViaShadow) {
+                        style = textStrokeViaShadow(thickness);
+                    }
+
+                    $("<style>#chat_container { " + style + " }</style>").appendTo("head");
+                }
 
             // shadow
             if (Chat.info.shadow)
@@ -1331,6 +1414,7 @@ var Chat = {
                 '-webkit-background-clip': 'text',
                 '-webkit-text-fill-color': 'transparent',
                 'background-color': 'currentColor',
+                '-webkit-text-stroke': '0px', // Stroke breaks 7tv namepaints
                 // 'text-shadow': 'none', // Removing global shadow (ChatIS setting)
             }
 
@@ -1338,6 +1422,10 @@ var Chat = {
                 userPaintCSS['filter'] = `${dropShadow};`;
             if (defaultColor)
                 userPaintCSS['color'] = `${defaultColor} !important;`;
+
+            if (Chat.flags.usingHackyStrokeViaShadow) {
+                userPaintCSS['text-shadow'] = 'none';
+            }
         }
         return userPaintCSS;
     },
