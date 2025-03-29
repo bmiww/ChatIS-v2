@@ -3,6 +3,7 @@ on:
     branches:
       - main
       - stage
+      - dev
 
 jobs:
   deploy:
