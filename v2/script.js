@@ -482,7 +482,7 @@ var Chat = {
 
                     const data = JSON.parse(event.data);
 
-                    console.debug("[ChatIS][7tv] EventAPI WS message:", data);
+                    // console.debug("[ChatIS][7tv] EventAPI WS message:", data);
                     
                     switch (data.op) {
                         case ops.DISPATCH: {
