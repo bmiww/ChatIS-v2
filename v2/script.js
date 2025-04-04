@@ -1,4 +1,4 @@
-const version = '2.34.3+521';
+const version = '2.34.4+522';
 
 function* entries(obj) {
     for (let key of Object.keys(obj)) {
@@ -311,7 +311,7 @@ var Chat = {
 
             // TODO: Make the loading thing await this whole function
 
-            console.log("ChatIS: [7tv] Connecting to EventAPI v3 using WSS...");
+            console.debug("[ChatIS][7tv] Connecting to EventAPI v3 using WSS...");
 
             const id = Chat.info.channelID;
             const seventvUser = await (await fetch(`https://7tv.io/v3/users/twitch/${id}`)).json();
@@ -322,7 +322,7 @@ var Chat = {
 
             Chat.stv.eventApi.connectWs(false);
 
-            console.log("ChatIS: [7tv] Connected to EventAPI v3. Channel emote set id:", channelEmoteSetId, "Channel id:", id);
+            console.info("[ChatIS][7tv] Connected to EventAPI v3. Channel emote set id:", channelEmoteSetId, "Channel id:", id);
         },
 
         eventApi: {
@@ -361,16 +361,16 @@ var Chat = {
                 timeoutId: null,
 
                 now: (resume, reason) => {
-                    console.log("ChatIS: [7tv] EventAPI, reconnecting... (Reason:", reason, ")");
+                    console.debug("[ChatIS][7tv] EventAPI, reconnecting... (Reason:", reason, ")");
                     Chat.stv.eventApi.reconnect.cancel();
                     Chat.stv.eventApi.connectWs(resume);
                 },
                 after: (resume, timeoutMs, jitterMs, reason) => {
                     const realTimeoutMs = timeoutMs + jitterMs * (1 - 2 * Math.random());
-                    console.log("ChatIS: [7tv] EventAPI, reconnecting in about", Math.round(realTimeoutMs/1000), "seconds... (Reason:", reason, ")");
+                    console.debug("[ChatIS][7tv] EventAPI, reconnecting in about", Math.round(realTimeoutMs/1000), "seconds... (Reason:", reason, ")");
                     Chat.stv.eventApi.reconnect.cancel();
                     Chat.stv.eventApi.reconnect.timeoutId = setTimeout(() => {
-                        console.log("ChatIS: [7tv] EventAPI, reconnecting as scheduled...");
+                        console.debug("[ChatIS][7tv] EventAPI, reconnecting as scheduled...");
                         Chat.stv.eventApi.connectWs(resume);
                     }, realTimeoutMs);
                 },
@@ -474,22 +474,24 @@ var Chat = {
                 Chat.stv.eventApi.ws = new WebSocket("wss://events.7tv.io/v3");
                 
                 Chat.stv.eventApi.ws.addEventListener("open", (event) => {
-                    // console.log("ChatIS: [7tv] EventAPI WS opened");
+                    console.debug("[ChatIS][7tv] EventAPI WS opened");
                 });
                 
                 Chat.stv.eventApi.ws.addEventListener("message", (event) => {
-                    // console.log("[MSG]", event);
+                    // console.debug("[ChatIS][7tv] EventAPI WS message event:", event);
 
                     const data = JSON.parse(event.data);
+
+                    console.debug("[ChatIS][7tv] EventAPI WS message:", data);
                     
                     switch (data.op) {
                         case ops.DISPATCH: {
                             Chat.stv.handleDispatchEvent(data);
                         } break;
                         case ops.HELLO: {
-                            console.log("ChatIS: [7tv] EventAPI, got HELLO from server, sessionId:", data.d.session_id);
+                            console.debug("[ChatIS][7tv] EventAPI, got HELLO from server, sessionId:", data.d.session_id);
                             if (resume && Chat.stv.eventApi.sessionId) {
-                                console.log("ChatIS: [7tv] EventAPI, trying to RESUME using sessionId:", Chat.stv.eventApi.sessionId);
+                                console.debug("[ChatIS][7tv] EventAPI, trying to RESUME using sessionId:", Chat.stv.eventApi.sessionId);
                                 Chat.stv.eventApi.sendMsg(ops.RESUME, {
                                     session_id: Chat.stv.eventApi.sessionId,
                                 });
@@ -517,7 +519,7 @@ var Chat = {
                             Chat.stv.eventApi.ackCount = Chat.stv.eventApi.ackCount + 1;
                             if (data.d.command === "RESUME") {
                                 Chat.stv.eventApi.resumeAck = true;
-                                console.log("ChatIS: [7tv] EventAPI, successfully RESUMEd with sessionId:", Chat.stv.eventApi.sessionId);
+                                console.debug("[ChatIS][7tv] EventAPI, successfully RESUMEd with sessionId:", Chat.stv.eventApi.sessionId);
                             }
                         } break;
                         case ops.ERROR: {
@@ -530,7 +532,7 @@ var Chat = {
                 });
                 
                 Chat.stv.eventApi.ws.addEventListener("close", (event) => {
-                    // console.log("[CLOSE]", event);
+                    console.debug("[ChatIS][7tv] EventAPI WS close:", event);
 
                     const codes = Chat.stv.eventApi.wsCloseCodes;
 
@@ -562,7 +564,7 @@ var Chat = {
                 });
                 
                 Chat.stv.eventApi.ws.addEventListener("error", (event) => {
-                    console.log("ChatIS: [7tv] EventAPI WS error:", event);
+                    console.warn("[ChatIS][7tv] EventAPI WS error:", event);
 
                     Chat.stv.eventApi.reconnect.after(false, 20 * 1000, 10 * 1000, "WebSocket error");
                 });
@@ -572,16 +574,15 @@ var Chat = {
         },
 
         handleDispatchEvent: function (event) {
-            // console.log(event);
             const data = event.d;
-            // console.log("ChatIS: [7tv] DISPATCH full:", data);
+            console.debug("[ChatIS][7tv] EventAPI, DISPATCH full:", data);
 
             // // Extended logs
             // switch (data.type) {
             //     case 'emote_set.create':
             //     // case 'emote_set.update':
             //     case 'emote_set.delete':
-            //         console.log("ChatIS: [7tv] ", data.type, " short:", {
+            //         console.debug("[ChatIS][7tv] ", data.type, " short:", {
             //             id: data.body.object.id,
             //             // kind: "EMOTE_SET",
             //             name: data.body.object.name,
@@ -590,7 +591,7 @@ var Chat = {
             //     case 'cosmetic.create':
             //     // case 'cosmetic.update':
             //     case 'cosmetic.delete':
-            //         console.log("ChatIS: [7tv] ", data.type, " short:", {
+            //         console.debug("[ChatIS][7tv] ", data.type, " short:", {
             //             id: data.body.object.id,
             //             kind: data.body.object.kind,
             //             name: data.body.object.data.name,
@@ -599,7 +600,7 @@ var Chat = {
             //     case 'entitlement.create':
             //     // case 'entitlement.update':
             //     case 'entitlement.delete':
-            //         console.log("ChatIS: [7tv] ", data.type, " short:", {
+            //         console.debug("[ChatIS][7tv] ", data.type, " short:", {
             //             ref_id: data.body.object.ref_id,
             //             user: data.body.object.user.username,
             //             kind: data.body.object.kind,
@@ -609,8 +610,9 @@ var Chat = {
             // }
 
             switch (data.type) {
-                case 'emote_set.create':
-                    break;
+                case 'emote_set.create': {
+                    // console.debug("[ChatIS][7tv] EventAPI DISPATCH emote_set.create:", data.body);
+                } break;
                 case 'emote_set.update': {
                     const emotesRemoved = (data.body.pulled || []).map(obj => obj.old_value);
                     const emotesAdded = (data.body.pushed || []).map(obj => obj.value.data);
@@ -625,22 +627,24 @@ var Chat = {
                                 3*1000);
                     }
 
-                    // console.log("ChatIS: [7tv] emotes added:", emotesAdded, "emotes removed:", emotesRemoved);
                     for (const emote of emotesRemoved) {
-                        // console.log("ChatIS: [7tv] emote remove: ", emote.name);
+                        // console.log("[ChatIS][7tv] EventAPI emote remove:", emote.name);
                         delete Chat.info.emotes[emote.name];
                         if (data.body.id === Chat.stv.channelEmoteSetId) // Updates are about the channel emote set
                             showFloat(9, '7TV emote update!\n' + 'REMOVE:\n' + strmax(emote.name, 16), 3*1000);
                     }
                     for (const emote of emotesAdded) {
-                        // console.log("ChatIS: [7tv] emote add: ", emote.name, "   ", Chat.stv.emoteToChatisEmote(emote, false));
+                        // console.log("[ChatIS][7tv] EventAPI emote add:", emote.name, " ", Chat.stv.emoteToChatisEmote(emote, false));
                         Chat.info.emotes[emote.name] = Chat.stv.emoteToChatisEmote(emote, false);
                         if (data.body.id === Chat.stv.channelEmoteSetId) // Updates are about the channel emote set
                             showFloat(9, '7TV emote update!\n' + 'ADD:\n' + strmax(emote.name, 16), 3*1000);
                     }
+
+                    console.debug("[ChatIS][7tv] EventAPI emotes added:", emotesAdded, "emotes removed:", emotesRemoved);
                 } break;
-                case 'emote_set.delete':
-                    break;
+                case 'emote_set.delete': {
+                    // console.debug("[ChatIS][7tv] EventAPI DISPATCH emote_set.delete:", data.body);
+                } break;
 
                 case 'cosmetic.create': {
                     switch (data.body.object.kind) {
@@ -649,20 +653,22 @@ var Chat = {
                             let cosmetic = data.body.object.data;
                             cosmetic._kind = data.body.object.kind;
                             Chat.stv.cosmetics.set(data.body.object.id, cosmetic);
+                            console.debug("[ChatIS][7tv] EventAPI cosmetic create:", cosmetic);
                         } break;
                     }
-                }   break;
+                } break;
                 case 'cosmetic.update': {
                     // I'll deal with this later ig bruh
-                }   break;
+                } break;
                 case 'cosmetic.delete': {
                     switch (data.body.object.kind) {
                         case 'PAINT':
                         case 'BADGE':
                             Chat.stv.cosmetics.delete(data.body.object.id);
+                            console.debug("[ChatIS][7tv] EventAPI cosmetic delete:", data.body.object.id);
                             break;
                     }
-                }   break;
+                } break;
 
                 case 'entitlement.create': {
                     // const username = data.body.object.user.username; // 7tv username, can be different
@@ -674,17 +680,19 @@ var Chat = {
                         // case 'EMOTE_SET':
                         case 'BADGE':
                             Chat.stv.addBadgeToUserBadges(username, data.body.object.ref_id);
+                            console.debug("[ChatIS][7tv] EventAPI entitlement create BADGE:", username, data.body.object.ref_id);
                             break;
                         case 'PAINT':
                             if (!Chat.stv.userCosmetics.has(username))
                                 Chat.stv.userCosmetics.set(username, []);
                             Chat.stv.userCosmetics.get(username).push(data.body.object.ref_id)
+                            console.debug("[ChatIS][7tv] EventAPI entitlement create PAINT:", username, data.body.object.ref_id);
                             break;
                     }
-                }   break;
+                } break;
                 case 'entitlement.update': {
                     // I'll deal with this later ig bruh
-                }   break;
+                } break;
                 case 'entitlement.delete': {
                     const username = ((data.body.object.user.connections || [])
                             .find(conn => conn.platform === "TWITCH") || {}).username
@@ -701,7 +709,7 @@ var Chat = {
                                 )
                             break;
                     }
-                }   break;
+                } break;
 
                 default:
                     break;
@@ -948,7 +956,7 @@ var Chat = {
 
             if (!res.data[0]) {
                 Chat.info.channelID = 0;
-                console.log("ChatIS: This twitch channel does not exist!");
+                console.error("[ChatIS][Twitch] This twitch channel does not exist!");
                 showFloat(1, 'This twitch channel does not exist', 5*60*1000);
                 $('#loader').hide();
             } else
@@ -1803,6 +1811,7 @@ var Chat = {
                 return true;
             return channelParam.includes(Chat.info.channel.toLowerCase());
         }
+        const msgSourceChannel = (message.params[0] || '').toLowerCase();
 
         if (text.toLowerCase().startsWith("!chatis reload") && isForThisChannel() && (nick.toLowerCase() === 'is2511')) {
             window.location.reload(true);
@@ -1902,11 +1911,14 @@ var Chat = {
                 let cmd = args[1];
 
                 if (Chat.info.nocmd.channels.has(Chat.info.channel.toLowerCase())) {
-                    if ((accessLevel < 1000) && (!Chat.info.nocmd.whitelist.has(cmd)))
+                    if ((accessLevel < 1000) && (!Chat.info.nocmd.whitelist.has(cmd))) {
+                        console.debug(`[ChatIS][CMD] #${msgSourceChannel} ${nick} (${accessLevel}): ${text}`);
                         return;
+                    }
                 }
 
-                // console.log('ChatIS CMD: ' + cmd);
+                console.log(`[ChatIS][CMD] #${msgSourceChannel} ${nick} (${accessLevel}): ${text}`);
+
                 switch (cmd) {
                     case 'ping': {
                         if (accessLevel < 500) return;
@@ -1929,7 +1941,7 @@ var Chat = {
                         break;
                     case 'reload': {
                         if (accessLevel < 500) return;
-                        console.log("ChatIS: Reloading page...");
+                        console.info("[ChatIS][CMD] Reloading page...");
                         // let href = window.location.href.replace(/&random=[0-9]*/g, "")
                         // href += '&random=' + Math.floor(Math.random()*1e8);
                         // window.location = href;
@@ -2462,7 +2474,7 @@ var Chat = {
             let socket = new ReconnectingWebSocket('wss://irc-ws.chat.twitch.tv', 'irc', { reconnectInterval: 2000 });
 
             socket.onopen = function() {
-                console.log('ChatIS: Connected to #' + channel);
+                console.info(`[ChatIS] Connected to #${channel}`);
                 socket.send('PASS blah\r\n');
                 socket.send('NICK justinfan' + Math.floor(Math.random() * 99999) + '\r\n');
                 socket.send('CAP REQ :twitch.tv/commands twitch.tv/tags\r\n');
@@ -2470,7 +2482,7 @@ var Chat = {
             };
 
             socket.onclose = function() {
-                console.log('ChatIS: Disconnected from #' + channel);
+                console.info(`[ChatIS] Disconnected from #${channel}`);
             };
 
             socket.onmessage = function(data) {
@@ -2484,7 +2496,7 @@ var Chat = {
                             socket.send('PONG ' + message.params[0]);
                             return;
                         case "JOIN":
-                            console.log('ChatIS: Joined channel #' + channel);
+                            console.info('[ChatIS] Joined channel #' + channel);
                             $('#loader').hide();
                             return;
                         case "CLEARMSG":
@@ -2593,7 +2605,7 @@ Chat.connectForCommands = function(channel) {
     let socket = new ReconnectingWebSocket('wss://irc-ws.chat.twitch.tv', 'irc', { reconnectInterval: 2000 });
 
     socket.onopen = function() {
-        console.log('ChatIS: Connected to #' + channel + ' (commands)');
+        console.info(`[ChatIS] Connected to #${channel} (commands)`);
         socket.send('PASS blah\r\n');
         socket.send('NICK justinfan' + Math.floor(Math.random() * 99999) + '\r\n');
         socket.send('CAP REQ :twitch.tv/commands twitch.tv/tags\r\n');
@@ -2601,7 +2613,7 @@ Chat.connectForCommands = function(channel) {
     };
 
     socket.onclose = function() {
-        console.log('ChatIS: Disconnected from #' + channel + ' (commands)');
+        console.info(`[ChatIS] Disconnected from #${channel} (commands)`);
     };
 
     socket.onmessage = function(data) {
@@ -2615,7 +2627,7 @@ Chat.connectForCommands = function(channel) {
                     socket.send('PONG ' + message.params[0]);
                     return;
                 case "JOIN":
-                    console.log('ChatIS: Joined channel #' + channel + ' (commands)');
+                    console.info(`[ChatIS] Joined channel #${channel} (commands)`);
                     return;
                 case "PRIVMSG":
                     if (message.params[0] !== '#' + channel || !message.params[1]) return;
@@ -2636,7 +2648,7 @@ Chat.connectForCommands = function(channel) {
 
 Chat.reloadEmotes = (msgExtra = '') => {
     showFloat(9, msgExtra + '\nReloading emotes...', 10*1000);
-    console.log('ChatIS: Reloading emotes...');
+    console.info('[ChatIS] Reloading emotes...');
     Chat.loadEmotes(Chat.info.channelID).then(
         () => {
             showFloat(9, 'Reloading emotes... Done!', 1000);
@@ -2649,7 +2661,7 @@ Chat.reloadEmotes = (msgExtra = '') => {
 
 Chat.reloadCosmetics = (msgExtra = '') => {
     showFloat(11, msgExtra + '\nReloading cosmetics...', 10*1000);
-    console.log('ChatIS: Reloading cosmetics...');
+    console.info('[ChatIS] Reloading cosmetics...');
     Chat.loadCosmetics(Chat.info.channelID).then(
         () => {
             showFloat(11, 'Reloading cosmetics... Done!', 1000);
@@ -2664,9 +2676,10 @@ Chat.reloadCosmetics = (msgExtra = '') => {
 
 $(document).ready(function() {
     Chat.connect($.QueryString.channel ? $.QueryString.channel.toLowerCase() : 'xqc');
-    if ($.QueryString.channel.toLowerCase() !== 'is2511') Chat.connectForCommands('is2511');
+    if ($.QueryString.channel.toLowerCase() !== 'is2511')
+        Chat.connectForCommands('is2511');
     let rng = window.location.href.match(/&random=([0-9]*)/);
-    console.log('ChatIS: Loading... v' + version);
+    console.info(`[ChatIS] Loading... v${version}`);
     showFloat(1, 'ChatIS v' + version
         + (rng ? ("\nrandom: " + rng[1]) : ''), 5*1000);
 });
