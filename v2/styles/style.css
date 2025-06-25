@@ -46,10 +46,9 @@ body {
     display: none;
 }
 
-.zerowidth {
-    /*margin-left: -100%;*/
+.emote-container:has(+ .emote-container.zerowidth) {
+    width: 0px;
 }
-
 
 .loader {
     border: 16px solid #f3f3f3; /* Light grey */

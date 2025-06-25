@@ -283,12 +283,6 @@ var Chat = {
         usingHackyStrokeViaShadow: false,
     },
 
-    // Called by img elements with the zerowidth class
-    zw: function (elem) {
-        $(elem).css('margin-left', '-' + (elem.clientWidth) + 'px');
-    },
-
-
     // 7tv EventAPI stuff
     stv: {
         // General structure: { $id: object }
@@ -1662,11 +1656,9 @@ var Chat = {
             Object.entries(Chat.info.emotes).forEach(emote => {
                 if (message.search(escapeRegExp(emote[0])) > -1) {
                     replacements[emote[0]] =
-                        '<span class="emote-container">' +
+                        `<span class="emote-container ${(emote[1].zeroWidth ? ' zerowidth' : '')}">` +
                         '<img class="emote'
-                        + (emote[1].upscale ? ' upscale' : '')
-                        + (emote[1].zeroWidth ? ' zerowidth' : '') + '"'
-                        + (emote[1].zeroWidth ? ' onload="Chat.zw(this)"' : '')
+                        + (emote[1].upscale ? ' upscale' : '') + '"'
                         + ' src="' + emote[1].image + '" />' +
                         '</span>';
                 }
